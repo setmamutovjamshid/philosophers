@@ -23,13 +23,18 @@
             <div class="flex flex-col md:flex-row items-center md:items-start gap-8">
                 
                 <!-- Philosopher Image -->
-                <div class="flex-shrink-0 w-44 sm:w-56 aspect-4/5 rounded-2xl overflow-hidden shadow-lg border-4 border-white bg-slate-100">
+                <div class="flex-shrink-0 w-48 sm:w-60 h-64 sm:h-80 aspect-[4/5] rounded-2xl overflow-hidden shadow-lg border-4 border-white bg-slate-100 relative">
                     {% if philosopher.image %}
                         <img
                             src="{{ philosopher.image.url }}"
                             alt="{{ philosopher.name }}"
                             class="w-full h-full object-cover object-top"
+                            onerror="this.style.display='none'; document.getElementById('imageFallback').classList.remove('hidden');"
                         />
+                        <div id="imageFallback" class="hidden w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 text-blue-600 p-6 text-center">
+                            <span class="text-5xl font-black mb-2">{{ philosopher.name|first|upper }}</span>
+                            <span class="text-xs text-slate-400 font-medium">Rasm yuklanmadi</span>
+                        </div>
                     {% else %}
                         <div class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 text-blue-600 p-6 text-center">
                             <span class="text-5xl font-black mb-2">{{ philosopher.name|first|upper }}</span>
