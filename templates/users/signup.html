@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+
+{% block title %}Ro'yxatdan o'tish | Xavfsiz Tizim{% endblock %}
+
+{% block content %}
+<div class="py-10 px-4 sm:px-6 lg:px-8 flex justify-center items-center">
+    <div class="w-full max-w-lg bg-white border border-slate-200/80 rounded-3xl shadow-xl shadow-slate-100 p-8 sm:p-10 transition-all">
+        
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white mb-4 shadow-lg shadow-blue-500/20 ring-4 ring-blue-50">
+                <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Hisob yaratish</h1>
+            <p class="text-sm text-slate-500 mt-2">
+                O'z profilingizni xavfsiz yarating va boshlang
+            </p>
+        </div>
+
+        <!-- Form -->
+        <form method="POST" id="signupForm" novalidate class="space-y-4">
+            {% csrf_token %}
+
+            <!-- Non-field / Global Errors -->
+            {% if form.non_field_errors %}
+                <div class="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm space-y-1">
+                    {% for error in form.non_field_errors %}
+                        <p class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                            {{ error }}
+                        </p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- To'liq Ism -->
+            <div>
+                <label for="{{ form.full_name.id_for_label }}" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                    {{ form.full_name.label }}
+                </label>
+                {{ form.full_name }}
+                {% if form.full_name.errors %}
+                    <p class="mt-1 text-xs text-red-600 font-medium">{{ form.full_name.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Username -->
+            <div>
+                <label for="{{ form.username.id_for_label }}" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                    {{ form.username.label }}
+                </label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                    <p class="mt-1 text-xs text-red-600 font-medium">{{ form.username.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Email -->
+            <div>
+                <label for="{{ form.email.id_for_label }}" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                    {{ form.email.label }}
+                </label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <p class="mt-1 text-xs text-red-600 font-medium">{{ form.email.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Parol -->
+            <div>
+                <label for="id_password1" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Parol
+                </label>
+                <div class="relative">
+                    {{ form.password1 }}
+                    <button type="button" onclick="togglePasswordVisibility('id_password1', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition focus:outline-none" tabindex="-1">
+                        <svg class="w-5 h-5 eye-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Instant Password Strength Indicator -->
+                <div id="passwordStrengthContainer" class="mt-2.5 space-y-2 hidden">
+                    <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden flex">
+                        <div id="strengthBar" class="h-full w-0 transition-all duration-300"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-1.5 text-[11px] text-slate-500 pt-0.5">
+                        <div id="ruleLength" class="flex items-center gap-1.5 transition-colors">
+                            <span class="rule-icon w-3.5 h-3.5 flex items-center justify-center rounded-full bg-slate-200 text-slate-500">✕</span>
+                            <span>Kamida 8 ta belgi</span>
+                        </div>
+                        <div id="ruleLetter" class="flex items-center gap-1.5 transition-colors">
+                            <span class="rule-icon w-3.5 h-3.5 flex items-center justify-center rounded-full bg-slate-200 text-slate-500">✕</span>
+                            <span>Harf ishtiroki</span>
+                        </div>
+                        <div id="ruleNumber" class="flex items-center gap-1.5 transition-colors">
+                            <span class="rule-icon w-3.5 h-3.5 flex items-center justify-center rounded-full bg-slate-200 text-slate-500">✕</span>
+                            <span>Raqam ishtiroki</span>
+                        </div>
+                    </div>
+                </div>
+
+                {% if form.password1.errors %}
+                    <p class="mt-1 text-xs text-red-600 font-medium">{{ form.password1.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Parolni tasdiqlash -->
+            <div>
+                <label for="id_password2" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Parolni qayta kiriting
+                </label>
+                <div class="relative">
+                    {{ form.password2 }}
+                    <button type="button" onclick="togglePasswordVisibility('id_password2', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition focus:outline-none" tabindex="-1">
+                        <svg class="w-5 h-5 eye-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </button>
+                </div>
+                {% if form.password2.errors %}
+                    <p class="mt-1 text-xs text-red-600 font-medium">{{ form.password2.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Submit Button -->
+            <button
+                type="submit"
+                id="submitBtn"
+                class="w-full mt-6 py-3 px-4 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:scale-[0.99] transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 group cursor-pointer"
+            >
+                <span id="btnText">Ro'yxatdan o'tish</span>
+                <svg id="btnSpinner" class="hidden w-5 h-5 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </button>
+
+            <!-- Login Link -->
+            <p class="text-center text-xs text-slate-500 pt-3">
+                Hisobingiz allaqachon bormi?
+                <a href="{% url 'login' %}" class="text-blue-600 hover:text-blue-700 font-semibold hover:underline">
+                    Kirish
+                </a>
+            </p>
+        </form>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Parol ko'rsatish/yashirish
+    function togglePasswordVisibility(inputId, button) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        if (input.type === 'password') {
+            input.type = 'text';
+            button.innerHTML = `
+                <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                </svg>
+            `;
+        } else {
+            input.type = 'password';
+            button.innerHTML = `
+                <svg class="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+            `;
+        }
+    }
+
+    // Real-time Parol validatsiyasi va quvvati indikatori
+    const passwordInput = document.getElementById('id_password1');
+    const strengthContainer = document.getElementById('passwordStrengthContainer');
+    const strengthBar = document.getElementById('strengthBar');
+    const ruleLength = document.getElementById('ruleLength');
+    const ruleLetter = document.getElementById('ruleLetter');
+    const ruleNumber = document.getElementById('ruleNumber');
+
+    function updateRule(element, isValid) {
+        const icon = element.querySelector('.rule-icon');
+        if (isValid) {
+            element.classList.remove('text-slate-500');
+            element.classList.add('text-emerald-600', 'font-medium');
+            icon.classList.remove('bg-slate-200', 'text-slate-500');
+            icon.classList.add('bg-emerald-100', 'text-emerald-700');
+            icon.textContent = '✓';
+        } else {
+            element.classList.remove('text-emerald-600', 'font-medium');
+            element.classList.add('text-slate-500');
+            icon.classList.remove('bg-emerald-100', 'text-emerald-700');
+            icon.classList.add('bg-slate-200', 'text-slate-500');
+            icon.textContent = '✕';
+        }
+    }
+
+    if (passwordInput) {
+        passwordInput.addEventListener('input', (e) => {
+            const val = e.target.value;
+            if (val.length === 0) {
+                strengthContainer.classList.add('hidden');
+                return;
+            }
+            strengthContainer.classList.remove('hidden');
+
+            const hasLength = val.length >= 8;
+            const hasLetter = /[a-zA-Z]/.test(val);
+            const hasNumber = /[0-9]/.test(val);
+            const hasSpecial = /[^a-zA-Z0-9]/.test(val);
+
+            updateRule(ruleLength, hasLength);
+            updateRule(ruleLetter, hasLetter);
+            updateRule(ruleNumber, hasNumber);
+
+            let score = 0;
+            if (hasLength) score++;
+            if (hasLetter) score++;
+            if (hasNumber) score++;
+            if (hasSpecial) score++;
+
+            if (score <= 1) {
+                strengthBar.className = 'h-full transition-all duration-300 w-1/4 bg-red-500';
+            } else if (score === 2) {
+                strengthBar.className = 'h-full transition-all duration-300 w-2/4 bg-amber-500';
+            } else if (score === 3) {
+                strengthBar.className = 'h-full transition-all duration-300 w-3/4 bg-blue-500';
+            } else {
+                strengthBar.className = 'h-full transition-all duration-300 w-full bg-emerald-500';
+            }
+        });
+    }
+
+    // Loading spinner on form submit
+    const signupForm = document.getElementById('signupForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+
+    signupForm.addEventListener('submit', () => {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+        btnText.textContent = "Yaratilmoqda...";
+        btnSpinner.classList.remove('hidden');
+    });
+</script>
+{% endblock %}

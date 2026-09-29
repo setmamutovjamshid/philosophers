@@ -1,0 +1,323 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ quiz.title }} — Test yechish | Falsafa Olami{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <!-- Top Bar -->
+    <div class="flex items-center justify-between mb-8">
+        <a href="{% url 'tests' %}" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-blue-600 transition">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Barcha testlar
+        </a>
+        <span class="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+            {{ quiz.title }}
+        </span>
+    </div>
+
+    {% if questions %}
+        <!-- Active Quiz Player Card -->
+        <div id="quizPlayerCard" class="bg-white rounded-3xl border border-slate-200/80 shadow-xl shadow-slate-100 p-6 sm:p-10 transition-all">
+            
+            <!-- Progress & Counter -->
+            <div class="space-y-2 mb-8">
+                <div class="flex items-center justify-between text-xs font-semibold">
+                    <span id="questionCounterText" class="text-blue-600">1 / 10 savol</span>
+                    <span id="progressPercentageText" class="text-slate-400">10%</span>
+                </div>
+                <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div id="progressBar" class="h-full bg-blue-600 transition-all duration-300 w-0"></div>
+                </div>
+            </div>
+
+            <!-- Question Text -->
+            <div class="mb-8">
+                <span id="questionOrderBadge" class="inline-block text-xs font-bold uppercase text-slate-400 mb-2">
+                    1-savol
+                </span>
+                <h2 id="questionText" class="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">
+                    Savol matni yuklanmoqda...
+                </h2>
+            </div>
+
+            <!-- Choices Container -->
+            <div id="choicesContainer" class="space-y-3">
+                <!-- Dynamically rendered choices -->
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="mt-10 pt-6 border-t border-slate-100 flex items-center justify-between gap-4">
+                <button
+                    type="button"
+                    id="prevBtn"
+                    onclick="goToPreviousQuestion()"
+                    class="px-5 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer"
+                >
+                    ← Oldingi
+                </button>
+
+                <button
+                    type="button"
+                    id="nextBtn"
+                    onclick="goToNextQuestion()"
+                    class="px-6 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 active:scale-[0.99] transition shadow-md shadow-blue-500/20 cursor-pointer"
+                >
+                    Keyingi →
+                </button>
+            </div>
+        </div>
+
+        <!-- Result Screen (Initially Hidden) -->
+        <div id="resultScreen" class="hidden bg-white rounded-3xl border border-slate-200/80 shadow-xl shadow-slate-100 p-6 sm:p-10 text-center">
+            
+            <div id="scoreIconContainer" class="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4 text-3xl shadow-lg">
+                <!-- Icon will be set dynamically -->
+            </div>
+
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Test yakunlandi!</h2>
+            <p id="scoreSummaryText" class="text-slate-600 text-base sm:text-lg mt-2 font-medium"></p>
+            
+            <div id="badgeContainer" class="inline-block px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mt-3"></div>
+
+            <!-- Actions -->
+            <div class="mt-8 flex flex-wrap justify-center gap-3">
+                <button
+                    type="button"
+                    onclick="restartQuiz()"
+                    class="px-6 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-md shadow-blue-500/20 cursor-pointer"
+                >
+                    Qaytadan urinish
+                </button>
+                <a
+                    href="{% url 'tests' %}"
+                    class="px-6 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-sm font-semibold hover:bg-slate-200 transition"
+                >
+                    Boshqa testlar
+                </a>
+            </div>
+
+            <!-- Detailed Answers Review -->
+            <div class="mt-12 text-left pt-8 border-t border-slate-100">
+                <h3 class="text-lg font-bold text-slate-900 mb-6">Savollar va javoblar tahlili:</h3>
+                <div id="answersReviewContainer" class="space-y-4">
+                    <!-- Questions review rendered dynamically -->
+                </div>
+            </div>
+
+        </div>
+
+    {% else %}
+        <!-- Empty State if no questions yet -->
+        <div class="text-center py-16 px-6 bg-white rounded-3xl border border-slate-200 shadow-sm">
+            <div class="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
+                ⚠️
+            </div>
+            <h3 class="text-lg font-bold text-slate-800">Ushbu to'plamga hali savollar qo'shilmagan</h3>
+            <p class="text-sm text-slate-500 mt-2">
+                Admin panel orqali savollar va ularning javob variantlarini kiritishingiz mumkin.
+            </p>
+            <a href="/admin/philosophers/question/add/?quiz={{ quiz.id }}" target="_blank" class="inline-flex items-center gap-2 mt-5 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700 transition">
+                Admin panelda savol qo'shish
+            </a>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if questions %}
+<script>
+    const questions = {{ questions_json|safe }};
+    const totalQuestions = questions.length;
+    let currentQuestionIdx = 0;
+    
+    // User selections: { questionIndex: selectedChoiceIndex }
+    const userAnswers = {};
+
+    function updateQuestionUI() {
+        const q = questions[currentQuestionIdx];
+        
+        // Update header & progress
+        const currentNum = currentQuestionIdx + 1;
+        document.getElementById('questionCounterText').textContent = `${currentNum} / ${totalQuestions} savol`;
+        const percentage = Math.round((currentNum / totalQuestions) * 100);
+        document.getElementById('progressPercentageText').textContent = `${percentage}%`;
+        document.getElementById('progressBar').style.width = `${percentage}%`;
+
+        // Update Question Text
+        document.getElementById('questionOrderBadge').textContent = `${currentNum}-savol`;
+        document.getElementById('questionText').textContent = q.text;
+
+        // Render Choices
+        const choicesContainer = document.getElementById('choicesContainer');
+        choicesContainer.innerHTML = '';
+
+        const alphabet = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+        q.choices.forEach((choice, idx) => {
+            const isSelected = userAnswers[currentQuestionIdx] === idx;
+            
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `w-full text-left p-4 rounded-2xl border transition-all flex items-center justify-between text-sm sm:text-base font-medium cursor-pointer ${
+                isSelected 
+                    ? 'border-blue-600 bg-blue-50/70 text-blue-900 ring-2 ring-blue-500/20' 
+                    : 'border-slate-200 hover:border-blue-300 hover:bg-slate-50 text-slate-800'
+            }`;
+
+            btn.onclick = () => selectChoice(idx);
+
+            const letter = alphabet[idx] || (idx + 1);
+
+            btn.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold ${
+                        isSelected 
+                            ? 'bg-blue-600 text-white' 
+                            : 'bg-slate-100 text-slate-600'
+                    }">
+                        ${letter}
+                    </span>
+                    <span>${choice.text}</span>
+                </div>
+                <div class="w-5 h-5 rounded-full border flex items-center justify-center ${
+                    isSelected ? 'border-blue-600 bg-blue-600' : 'border-slate-300'
+                }">
+                    ${isSelected ? '<span class="w-2 h-2 rounded-full bg-white"></span>' : ''}
+                </div>
+            `;
+
+            choicesContainer.appendChild(btn);
+        });
+
+        // Navigation buttons state
+        document.getElementById('prevBtn').disabled = currentQuestionIdx === 0;
+        
+        const nextBtn = document.getElementById('nextBtn');
+        if (currentQuestionIdx === totalQuestions - 1) {
+            nextBtn.textContent = "Testni yakunlash ✓";
+            nextBtn.className = "px-6 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 active:scale-[0.99] transition shadow-md shadow-emerald-500/20 cursor-pointer";
+        } else {
+            nextBtn.textContent = "Keyingi →";
+            nextBtn.className = "px-6 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 active:scale-[0.99] transition shadow-md shadow-blue-500/20 cursor-pointer";
+        }
+    }
+
+    function selectChoice(choiceIdx) {
+        userAnswers[currentQuestionIdx] = choiceIdx;
+        updateQuestionUI();
+    }
+
+    function goToNextQuestion() {
+        if (currentQuestionIdx < totalQuestions - 1) {
+            currentQuestionIdx++;
+            updateQuestionUI();
+        } else {
+            finishQuiz();
+        }
+    }
+
+    function goToPreviousQuestion() {
+        if (currentQuestionIdx > 0) {
+            currentQuestionIdx--;
+            updateQuestionUI();
+        }
+    }
+
+    function finishQuiz() {
+        let correctCount = 0;
+        const reviewContainer = document.getElementById('answersReviewContainer');
+        reviewContainer.innerHTML = '';
+
+        const alphabet = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+        questions.forEach((q, idx) => {
+            const userChoiceIdx = userAnswers[idx];
+            const isCorrect = userChoiceIdx === q.correct_index;
+            if (isCorrect) correctCount++;
+
+            const userChoiceText = userChoiceIdx !== undefined && q.choices[userChoiceIdx] 
+                ? q.choices[userChoiceIdx].text 
+                : "Javob berilmadi";
+            
+            const correctChoiceText = q.correct_index !== -1 && q.choices[q.correct_index]
+                ? q.choices[q.correct_index].text
+                : "Belgilanmagan";
+
+            const itemDiv = document.createElement('div');
+            itemDiv.className = `p-5 rounded-2xl border ${
+                isCorrect 
+                    ? 'border-emerald-200 bg-emerald-50/40' 
+                    : 'border-red-200 bg-red-50/40'
+            }`;
+
+            itemDiv.innerHTML = `
+                <div class="flex items-start justify-between gap-3 mb-2">
+                    <h4 class="font-bold text-slate-900 text-sm sm:text-base">
+                        ${idx + 1}-savol: ${q.text}
+                    </h4>
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                        isCorrect 
+                            ? 'bg-emerald-100 text-emerald-800' 
+                            : 'bg-red-100 text-red-800'
+                    }">
+                        ${isCorrect ? '✓ To\'g\'ri' : '✕ Noto\'g\'ri'}
+                    </span>
+                </div>
+                
+                <div class="text-xs space-y-1 text-slate-600">
+                    <p><strong class="text-slate-800">Sizning javobingiz:</strong> ${userChoiceText}</p>
+                    ${!isCorrect ? `<p class="text-emerald-700 font-semibold"><strong>To'g'ri javob:</strong> ${correctChoiceText}</p>` : ''}
+                    ${q.explanation ? `<p class="mt-2 text-slate-500 italic bg-white/70 p-2.5 rounded-xl border border-slate-200/60">💡 ${q.explanation}</p>` : ''}
+                </div>
+            `;
+
+            reviewContainer.appendChild(itemDiv);
+        });
+
+        // Score summary
+        const percentage = Math.round((correctCount / totalQuestions) * 100);
+        document.getElementById('scoreSummaryText').textContent = 
+            `Siz ${totalQuestions} ta savoldan ${correctCount} tasiga to'g'ri javob berdingiz (${percentage}% natija).`;
+
+        const iconContainer = document.getElementById('scoreIconContainer');
+        const badgeContainer = document.getElementById('badgeContainer');
+
+        if (percentage >= 80) {
+            iconContainer.className = "w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4 text-3xl shadow-lg bg-emerald-100 text-emerald-600";
+            iconContainer.textContent = "🏆";
+            badgeContainer.className = "inline-block px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mt-3 bg-emerald-100 text-emerald-800";
+            badgeContainer.textContent = "A'lo darajada!";
+        } else if (percentage >= 50) {
+            iconContainer.className = "w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4 text-3xl shadow-lg bg-blue-100 text-blue-600";
+            iconContainer.textContent = "👍";
+            badgeContainer.className = "inline-block px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mt-3 bg-blue-100 text-blue-800";
+            badgeContainer.textContent = "Yaxshi natija";
+        } else {
+            iconContainer.className = "w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4 text-3xl shadow-lg bg-amber-100 text-amber-600";
+            iconContainer.textContent = "📚";
+            badgeContainer.className = "inline-block px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mt-3 bg-amber-100 text-amber-800";
+            badgeContainer.textContent = "Yana takrorlash tavsiya etiladi";
+        }
+
+        document.getElementById('quizPlayerCard').classList.add('hidden');
+        document.getElementById('resultScreen').classList.remove('hidden');
+    }
+
+    function restartQuiz() {
+        for (let key in userAnswers) delete userAnswers[key];
+        currentQuestionIdx = 0;
+        document.getElementById('resultScreen').classList.add('hidden');
+        document.getElementById('quizPlayerCard').classList.remove('hidden');
+        updateQuestionUI();
+    }
+
+    // Initialize first question
+    updateQuestionUI();
+</script>
+{% endif %}
+{% endblock %}

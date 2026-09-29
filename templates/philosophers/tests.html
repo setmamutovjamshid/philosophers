@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Testlar — Falsafiy bilimlarni sinash | Falsafa Olami{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <!-- Header -->
+    <div class="text-center max-w-2xl mx-auto mb-10">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold mb-4 border border-blue-100">
+            <span>🧠</span> Bilimlaringizni sinovdan o'tkazing
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+            Falsafa Bo'yicha Testlar To'plami
+        </h1>
+        <p class="mt-3 text-base text-slate-600">
+            O'zingizga mos test to'plamini tanlang va falsafiy bilimlaringiz darajasini tekshiring.
+        </p>
+    </div>
+
+    <!-- Test Sets Grid -->
+    {% if quizzes %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for quiz in quizzes %}
+                <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-xl hover:border-blue-300 transition-all duration-300 p-6 flex flex-col justify-between group">
+                    <div>
+                        <!-- Header badge & Order -->
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold {% if quiz.total_questions >= 10 %}bg-emerald-50 text-emerald-700 border border-emerald-100{% else %}bg-amber-50 text-amber-700 border border-amber-100{% endif %}">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                </svg>
+                                {{ quiz.total_questions }} ta savol
+                            </span>
+                            <span class="text-xs font-mono font-bold text-slate-400">
+                                #{{ quiz.order }}
+                            </span>
+                        </div>
+
+                        <!-- Title -->
+                        <h2 class="text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                            {{ quiz.title }}
+                        </h2>
+
+                        <!-- Description -->
+                        {% if quiz.description %}
+                            <p class="text-slate-500 text-sm mt-2.5 leading-relaxed line-clamp-3">
+                                {{ quiz.description }}
+                            </p>
+                        {% else %}
+                            <p class="text-slate-400 text-xs mt-2.5 italic">
+                                Ushbu test to'plami bo'yicha 10 ta maxsus saralangan savollar.
+                            </p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Footer Action -->
+                    <div class="mt-6 pt-5 border-t border-slate-100">
+                        {% if quiz.total_questions > 0 %}
+                            <a
+                                href="{% url 'quiz_detail' slug=quiz.slug %}"
+                                class="w-full py-2.5 px-4 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:scale-[0.99] transition shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 group-hover:bg-blue-700"
+                            >
+                                <span>Testni boshlash</span>
+                                <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                </svg>
+                            </a>
+                        {% else %}
+                            <div class="text-center py-2 text-xs text-slate-400 font-medium">
+                                Savollar tez kunda kiritiladi
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- Empty State -->
+        <div class="text-center max-w-md mx-auto py-16 px-6 bg-white rounded-3xl border border-slate-200 shadow-sm">
+            <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-4 text-2xl">
+                ✍️
+            </div>
+            <h3 class="text-lg font-bold text-slate-800">Hozircha test to'plamlari kiritilmagan</h3>
+            <p class="text-sm text-slate-500 mt-2">
+                <strong>Admin panel</strong> orqali yangi test to'plamlarini (Test 1, Test 2...) va ularning savollarini qo'shishingiz mumkin.
+            </p>
+            <a href="/admin/philosophers/quiz/add/" target="_blank" class="inline-flex items-center gap-2 mt-5 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700 transition shadow-md shadow-blue-500/20">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Admin panelda test qo'shish
+            </a>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

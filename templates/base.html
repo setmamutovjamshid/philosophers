@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="uz" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Falsafa Olami{% endblock %}</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="min-h-full flex flex-col justify-between text-slate-800 antialiased selection:bg-blue-600 selection:text-white">
+
+    <!-- Top Navigation Header -->
+    <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 sm:h-20">
+                
+                <!-- Logo & Brand -->
+                <div class="flex items-center gap-8">
+                    <a href="{% url 'learn' %}" class="flex items-center gap-3 group">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="text-lg font-bold text-slate-900 tracking-tight block leading-tight">Falsafa</span>
+                            <span class="text-[11px] font-semibold text-blue-600 tracking-wider uppercase block">Platformasi</span>
+                        </div>
+                    </a>
+
+                    <!-- Desktop Navigation Categories -->
+                    <nav class="hidden md:flex items-center gap-1.5 pl-4 border-l border-slate-200">
+                        <a href="{% url 'learn' %}" class="px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 {% if request.resolver_match.url_name == 'learn' or request.resolver_match.url_name == 'philosopher_detail' %}bg-blue-50 text-blue-600 shadow-xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70{% endif %}">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            </svg>
+                            O'rganish
+                        </a>
+                        <a href="{% url 'tests' %}" class="px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 {% if request.resolver_match.url_name == 'tests' %}bg-blue-50 text-blue-600 shadow-xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70{% endif %}">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                            </svg>
+                            Testlar
+                        </a>
+                    </nav>
+                </div>
+
+                <!-- Right side: User actions / Auth -->
+                <div class="flex items-center gap-3">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'dashboard' %}" class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-slate-100 transition">
+                            <div class="w-8 h-8 rounded-lg bg-blue-600 text-white font-bold text-xs flex items-center justify-center">
+                                {{ user.first_name|first|default:user.username|first|upper }}
+                            </div>
+                            <span class="text-sm font-semibold text-slate-800 hidden sm:inline">
+                                {{ user.first_name|default:user.username }}
+                            </span>
+                        </a>
+                        <form action="{% url 'logout' %}" method="POST" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" title="Chiqish" class="p-2 rounded-xl text-slate-500 hover:text-red-600 hover:bg-red-50 transition cursor-pointer">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                </svg>
+                            </button>
+                        </form>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100 transition">
+                            Kirish
+                        </a>
+                        <a href="{% url 'signup' %}" class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20 active:scale-95 transition-all">
+                            Ro'yxatdan o'tish
+                        </a>
+                    {% endif %}
+
+                    <!-- Mobile Menu Button -->
+                    <button type="button" onclick="document.getElementById('mobileMenu').classList.toggle('hidden')" class="md:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Dropdown Navigation -->
+            <div id="mobileMenu" class="hidden md:hidden py-3 border-t border-slate-100 space-y-1">
+                <a href="{% url 'learn' %}" class="block px-3 py-2 rounded-xl text-base font-medium {% if request.resolver_match.url_name == 'learn' %}bg-blue-50 text-blue-600{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                    📖 O'rganish
+                </a>
+                <a href="{% url 'tests' %}" class="block px-3 py-2 rounded-xl text-base font-medium {% if request.resolver_match.url_name == 'tests' %}bg-blue-50 text-blue-600{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                    ✍️ Testlar
+                </a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}" class="block px-3 py-2 rounded-xl text-base font-medium text-slate-700 hover:bg-slate-50">
+                        👤 Profil (Dashboard)
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- Global Messages Toast -->
+    <div class="fixed top-24 right-5 z-50 max-w-md w-full space-y-3 pointer-events-none">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="pointer-events-auto transform transition-all duration-300 ease-out shadow-lg rounded-2xl p-4 flex items-start gap-3 border 
+                    {% if message.tags == 'error' %}
+                        bg-red-50 border-red-200 text-red-800
+                    {% elif message.tags == 'success' %}
+                        bg-emerald-50 border-emerald-200 text-emerald-800
+                    {% elif message.tags == 'warning' %}
+                        bg-amber-50 border-amber-200 text-amber-800
+                    {% else %}
+                        bg-blue-50 border-blue-200 text-blue-800
+                    {% endif %}"
+                    role="alert"
+                >
+                    <div class="flex-shrink-0 mt-0.5">
+                        {% if message.tags == 'error' %}
+                            <svg class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        {% elif message.tags == 'success' %}
+                            <svg class="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        {% else %}
+                            <svg class="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1 text-sm font-medium">
+                        {{ message }}
+                    </div>
+                    <button type="button" onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 transition">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Main Content Container -->
+    <main class="flex-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200/80 py-8 mt-16 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-800">Falsafa Olami</span> — Insoniyat tafakkuri xazinasi
+            </div>
+            <div class="flex items-center gap-6 text-slate-500">
+                <a href="{% url 'learn' %}" class="hover:text-blue-600 transition">O'rganish</a>
+                <a href="{% url 'tests' %}" class="hover:text-blue-600 transition">Testlar</a>
+                <a href="/admin/" target="_blank" class="hover:text-blue-600 transition">Admin Panel</a>
+            </div>
+            <div>
+                &copy; {% now "Y" %} Barcha huquqlar himoyalangan.
+            </div>
+        </div>
+    </footer>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
