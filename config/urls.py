@@ -6,7 +6,9 @@ from django.urls import include, path
 
 
 def home_redirect(request):
-    return redirect('learn')
+    if request.user.is_authenticated:
+        return redirect('learn')
+    return redirect('signup')
 
 
 urlpatterns = [

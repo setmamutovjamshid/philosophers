@@ -158,6 +158,9 @@ MAILERS = {
 AUTH_USER_MODEL = 'users.CustomUser'
 
 # Auth redirects
-LOGIN_REDIRECT_URL = 'dashboard'
+LOGIN_REDIRECT_URL = 'learn'
 LOGOUT_REDIRECT_URL = 'login'
-LOGIN_URL = 'login'
+LOGIN_URL = 'signup'
+
+# Admin faollashtirish maxfiy kaliti (Render Free da Shell bo'lmaganda)
+ADMIN_SETUP_SECRET = os.environ.get('ADMIN_SETUP_SECRET', 'falsafa2026')

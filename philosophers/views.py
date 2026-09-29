@@ -1,10 +1,12 @@
 import json
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, render
 from .models import Philosopher, Question, Quiz
 
 
+@login_required
 def philosopher_list_view(request):
     """
     Optimizatsiyalashgan 'O'rganish' bo'limi:
@@ -34,6 +36,7 @@ def philosopher_list_view(request):
     return render(request, 'philosophers/list.html', context)
 
 
+@login_required
 def philosopher_detail_view(request, slug):
     """Faylasuf haqida barcha batafsil ma'lumotlar sahifasi."""
     philosopher = get_object_or_404(Philosopher, slug=slug)
@@ -46,6 +49,7 @@ def philosopher_detail_view(request, slug):
     return render(request, 'philosophers/detail.html', context)
 
 
+@login_required
 def tests_view(request):
     """
     'Testlar' bo'limi:
@@ -62,6 +66,7 @@ def tests_view(request):
     return render(request, 'philosophers/tests.html', context)
 
 
+@login_required
 def quiz_detail_view(request, slug):
     """
     Tanlangan test to'plamini yechish sahifasi:

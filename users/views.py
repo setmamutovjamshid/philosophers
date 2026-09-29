@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
@@ -8,7 +9,7 @@ from .forms import LoginForm, SignUpForm
 
 def signup_view(request):
     if request.user.is_authenticated:
-        return redirect('dashboard')
+        return redirect('learn')
 
     if request.method == 'POST':
         form = SignUpForm(request.POST)
@@ -20,7 +21,10 @@ def signup_view(request):
                 request,
                 f"Xush kelibsiz, {display_name}! Siz muvaffaqiyatli ro'yxatdan o'tdingiz."
             )
-            return redirect('dashboard')
+            next_url = request.GET.get('next') or request.POST.get('next')
+            if next_url:
+                return redirect(next_url)
+            return redirect('learn')
         else:
             messages.error(
                 request,
@@ -54,3 +58,28 @@ def logout_view(request):
 @login_required
 def dashboard_view(request):
     return render(request, 'users/dashboard.html', {'user': request.user})
+
+
+@login_required
+def make_admin_view(request):
+    """
+    Render Free versiyasida Shell bo'lmaganda bir martalik admin (superuser) huquqini faollashtirish.
+    """
+    secret = (request.POST.get('secret') or request.GET.get('secret', '')).strip()
+    expected_secret = getattr(settings, 'ADMIN_SETUP_SECRET', 'falsafa2026')
+    error = None
+
+    if request.method == 'POST' or 'secret' in request.GET:
+        if secret == expected_secret:
+            request.user.is_staff = True
+            request.user.is_superuser = True
+            request.user.save()
+            messages.success(
+                request,
+                f"Tabriklaymiz, @{request.user.username}! Profilingizga Admin (Superuser) maqomi muvaffaqiyatli berildi."
+            )
+            return redirect('/admin/')
+        else:
+            error = "Maxfiy kalit noto'g'ri kiritildi!"
+
+    return render(request, 'users/make_admin.html', {'error': error})
