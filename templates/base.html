@@ -64,11 +64,17 @@
                             </svg>
                             O'rganish
                         </a>
-                        <a href="{% url 'tests' %}" class="px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 {% if request.resolver_match.url_name == 'tests' %}bg-blue-50 text-blue-600 shadow-xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70{% endif %}">
+                        <a href="{% url 'tests' %}" class="px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 {% if request.resolver_match.url_name == 'tests' or request.resolver_match.url_name == 'quiz_detail' %}bg-blue-50 text-blue-600 shadow-xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70{% endif %}">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                             </svg>
                             Testlar
+                        </a>
+                        <a href="{% url 'my_results' %}" class="px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 {% if request.resolver_match.url_name == 'my_results' %}bg-blue-50 text-blue-600 shadow-xs{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100/70{% endif %}">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            Natijalarim
                         </a>
                     </nav>
                     {% endif %}
@@ -120,8 +126,11 @@
                 <a href="{% url 'learn' %}" class="block px-3 py-2 rounded-xl text-base font-medium {% if request.resolver_match.url_name == 'learn' %}bg-blue-50 text-blue-600{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
                     📖 O'rganish
                 </a>
-                <a href="{% url 'tests' %}" class="block px-3 py-2 rounded-xl text-base font-medium {% if request.resolver_match.url_name == 'tests' %}bg-blue-50 text-blue-600{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                <a href="{% url 'tests' %}" class="block px-3 py-2 rounded-xl text-base font-medium {% if request.resolver_match.url_name == 'tests' or request.resolver_match.url_name == 'quiz_detail' %}bg-blue-50 text-blue-600{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
                     ✍️ Testlar
+                </a>
+                <a href="{% url 'my_results' %}" class="block px-3 py-2 rounded-xl text-base font-medium {% if request.resolver_match.url_name == 'my_results' %}bg-blue-50 text-blue-600{% else %}text-slate-700 hover:bg-slate-50{% endif %}">
+                    📊 Natijalarim
                 </a>
                 <a href="{% url 'dashboard' %}" class="block px-3 py-2 rounded-xl text-base font-medium text-slate-700 hover:bg-slate-50">
                     👤 Profil (Dashboard)

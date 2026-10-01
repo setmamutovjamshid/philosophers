@@ -20,7 +20,7 @@ class SignUpTests(TestCase):
             'password2': 'StrongPass123',
         }, follow=True)
 
-        self.assertRedirects(response, reverse('dashboard'))
+        self.assertRedirects(response, reverse('learn'))
         self.assertTrue(User.objects.filter(username='alivaliyev').exists())
         user = User.objects.get(username='alivaliyev')
         self.assertEqual(user.first_name, 'Ali')

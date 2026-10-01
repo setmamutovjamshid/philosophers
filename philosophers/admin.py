@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from .models import Choice, Philosopher, Question, Quiz
+from .models import Choice, Philosopher, Question, Quiz, QuizResult
 
 
 @admin.register(Philosopher)
@@ -97,3 +97,27 @@ class QuizAdmin(admin.ModelAdmin):
             color, count
         )
     questions_count.short_description = "Savollar soni"
+
+
+@admin.register(QuizResult)
+class QuizResultAdmin(admin.ModelAdmin):
+    list_display = ('user', 'quiz', 'score_display', 'percentage_badge', 'time_display', 'completed_at')
+    list_filter = ('quiz', 'completed_at')
+    search_fields = ('user__username', 'user__first_name', 'quiz__title')
+    readonly_fields = ('user', 'quiz', 'score', 'total_questions', 'percentage', 'time_spent_seconds', 'details', 'completed_at')
+
+    def score_display(self, obj):
+        return f"{obj.score} / {obj.total_questions}"
+    score_display.short_description = "To'plangan ball"
+
+    def percentage_badge(self, obj):
+        color = "#10b981" if obj.percentage >= 80 else ("#3b82f6" if obj.percentage >= 60 else ("#f59e0b" if obj.percentage >= 40 else "#ef4444"))
+        return format_html(
+            '<span style="font-weight: bold; color: {};">{}%</span>',
+            color, obj.percentage
+        )
+    percentage_badge.short_description = "Foiz"
+
+    def time_display(self, obj):
+        return obj.formatted_time
+    time_display.short_description = "Sarflangan vaqt"

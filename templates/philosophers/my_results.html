@@ -1,0 +1,297 @@
+{% extends 'base.html' %}
+
+{% block title %}Natijalarim — Falsafiy test natijalari va statistikasi{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+        <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold mb-3 border border-blue-100">
+                <span>📊</span> Shaxsiy ko'rsatkichlar va statistika
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                Mening Test Natijalarim
+            </h1>
+            <p class="mt-2 text-base text-slate-600">
+                Falsafa bo'yicha ishlagan testlaringiz, to'plangan ballaringiz va o'zlashtirish tahlili.
+            </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <a
+                href="{% url 'tests' %}"
+                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 active:scale-[0.99] transition shadow-md shadow-blue-500/20"
+            >
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <span>Yangi test ishlash</span>
+            </a>
+        </div>
+    </div>
+
+    {% if total_tests > 0 %}
+        <!-- Stats Summary Grid -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-10">
+            
+            <!-- Stat 1: Jami testlar -->
+            <div class="bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl font-bold flex-shrink-0">
+                    📝
+                </div>
+                <div>
+                    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Topshirilgan testlar</div>
+                    <div class="text-2xl font-extrabold text-slate-900 mt-0.5">{{ total_tests }} ta</div>
+                </div>
+            </div>
+
+            <!-- Stat 2: O'rtacha natija -->
+            <div class="bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl font-bold flex-shrink-0">
+                    📈
+                </div>
+                <div>
+                    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">O'rtacha ko'rsatkich</div>
+                    <div class="text-2xl font-extrabold {% if avg_percentage >= 70 %}text-emerald-600{% elif avg_percentage >= 50 %}text-blue-600{% else %}text-amber-600{% endif %} mt-0.5">
+                        {{ avg_percentage }}%
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stat 3: Eng yuqori natija -->
+            <div class="bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl font-bold flex-shrink-0">
+                    🏆
+                </div>
+                <div>
+                    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Eng yuqori natija</div>
+                    <div class="text-2xl font-extrabold text-amber-600 mt-0.5">{{ max_percentage }}%</div>
+                </div>
+            </div>
+
+            <!-- Stat 4: To'g'ri javoblar nisbati -->
+            <div class="bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl font-bold flex-shrink-0">
+                    🎯
+                </div>
+                <div>
+                    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">To'g'ri javoblar</div>
+                    <div class="text-2xl font-extrabold text-slate-900 mt-0.5">{{ total_correct }} / {{ total_questions }}</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Results Timeline / List -->
+        <div class="space-y-4">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-slate-900">
+                    Natijalar tarixi
+                </h2>
+                <span class="text-xs text-slate-400 font-medium">
+                    Jami {{ results.paginator.count }} ta urinish qayd etilgan
+                </span>
+            </div>
+
+            {% for result in results %}
+                <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all overflow-hidden" id="result-card-{{ result.id }}">
+                    <div class="p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                        
+                        <!-- Quiz Title & Date -->
+                        <div class="space-y-1.5 flex-1">
+                            <div class="flex items-center gap-2.5 flex-wrap">
+                                <h3 class="text-lg font-bold text-slate-900">
+                                    {{ result.quiz.title }}
+                                </h3>
+                                {% with status=result.grade_status %}
+                                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold border {{ status.badge_class }}">
+                                        <span>{{ status.badge_icon }}</span>
+                                        <span>{{ status.label }}</span>
+                                    </span>
+                                {% endwith %}
+                            </div>
+
+                            <div class="flex items-center gap-4 text-xs text-slate-500 flex-wrap">
+                                <span class="flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    {{ result.completed_at|date:"d M Y, H:i" }}
+                                </span>
+                                {% if result.time_spent_seconds > 0 %}
+                                    <span class="flex items-center gap-1.5">
+                                        <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        {{ result.formatted_time }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar & Score -->
+                        <div class="flex items-center gap-6 lg:w-72">
+                            <div class="flex-1 space-y-1.5">
+                                <div class="flex justify-between text-xs font-semibold">
+                                    <span class="text-slate-600">{{ result.score }} / {{ result.total_questions }} to'g'ri</span>
+                                    <span class="font-bold {% if result.percentage >= 80 %}text-emerald-600{% elif result.percentage >= 60 %}text-blue-600{% else %}text-amber-600{% endif %}">
+                                        {{ result.percentage }}%
+                                    </span>
+                                </div>
+                                <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                                    <div 
+                                        class="h-full rounded-full transition-all duration-500 {% if result.percentage >= 80 %}bg-emerald-500{% elif result.percentage >= 60 %}bg-blue-500{% else %}bg-amber-500{% endif %}"
+                                        style="width: {{ result.percentage }}%;"
+                                    ></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex items-center gap-2 pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-100">
+                            {% if result.details %}
+                                <button
+                                    type="button"
+                                    onclick="toggleDetails('{{ result.id }}')"
+                                    class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition flex items-center gap-1.5 cursor-pointer"
+                                    id="btn-toggle-{{ result.id }}"
+                                >
+                                    <span>Tahlilni ko'rish</span>
+                                    <svg class="w-3.5 h-3.5 transform transition-transform" id="icon-toggle-{{ result.id }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                            {% endif %}
+
+                            <a
+                                href="{% url 'quiz_detail' slug=result.quiz.slug %}"
+                                class="px-4 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition flex items-center gap-1.5"
+                                title="Ushbu testni qaytadan yechish"
+                            >
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                <span>Qayta ishlash</span>
+                            </a>
+                        </div>
+
+                    </div>
+
+                    <!-- Collapsible Question Breakdown -->
+                    {% if result.details %}
+                        <div id="details-{{ result.id }}" class="hidden border-t border-slate-100 bg-slate-50/60 p-6 space-y-4">
+                            <h4 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+                                <span>🔍</span> Savollar va sizning javoblaringiz tahlili:
+                            </h4>
+                            <div class="space-y-3">
+                                {% for item in result.details %}
+                                    <div class="p-4 rounded-2xl border text-xs sm:text-sm {% if item.is_correct %}border-emerald-200 bg-emerald-50/40{% else %}border-red-200 bg-red-50/40{% endif %}">
+                                        <div class="flex items-start justify-between gap-3 mb-1.5">
+                                            <div class="font-bold text-slate-900">
+                                                {{ item.question_order }}-savol: {{ item.question_text }}
+                                            </div>
+                                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold flex-shrink-0 {% if item.is_correct %}bg-emerald-100 text-emerald-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                                {% if item.is_correct %}✓ To'g'ri{% else %}✕ Noto'g'ri{% endif %}
+                                            </span>
+                                        </div>
+                                        <div class="space-y-1 text-slate-600 mt-2">
+                                            <p>
+                                                <strong class="text-slate-800">Sizning javobingiz:</strong> {{ item.user_choice_text }}
+                                            </p>
+                                            {% if not item.is_correct %}
+                                                <p class="text-emerald-700 font-semibold">
+                                                    <strong>To'g'ri javob:</strong> {{ item.correct_choice_text }}
+                                                </p>
+                                            {% endif %}
+                                            {% if item.explanation %}
+                                                <p class="mt-2 text-slate-500 italic bg-white/70 p-2.5 rounded-xl border border-slate-200/60">
+                                                    💡 {{ item.explanation }}
+                                                </p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+                <div class="flex items-center justify-center gap-2 pt-8">
+                    {% if page_obj.has_previous %}
+                        <a
+                            href="?page={{ page_obj.previous_page_number }}"
+                            class="px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                        >
+                            ← Oldingi
+                        </a>
+                    {% endif %}
+
+                    <span class="px-4 py-2 text-sm font-semibold text-slate-500">
+                        {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                    </span>
+
+                    {% if page_obj.has_next %}
+                        <a
+                            href="?page={{ page_obj.next_page_number }}"
+                            class="px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                        >
+                            Keyingi →
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+        </div>
+
+    {% else %}
+        <!-- Empty State -->
+        <div class="text-center max-w-lg mx-auto py-16 px-6 bg-white rounded-3xl border border-slate-200/80 shadow-sm">
+            <div class="w-20 h-20 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-5 text-3xl shadow-inner">
+                📊
+            </div>
+            <h2 class="text-2xl font-bold text-slate-900">
+                Hozircha test natijalari mavjud emas
+            </h2>
+            <p class="mt-2.5 text-sm text-slate-500 leading-relaxed">
+                Siz hali testlar bo'limida birorta ham test ishlamagansiz. 
+                Falsafiy bilimlaringiz darajasini sinash uchun to'plamlardan birini tanlab yechishni boshlang!
+            </p>
+            <div class="mt-8">
+                <a
+                    href="{% url 'tests' %}"
+                    class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 active:scale-[0.99] transition shadow-md shadow-blue-500/20"
+                >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                    <span>Testlarni boshlash</span>
+                </a>
+            </div>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function toggleDetails(resultId) {
+        const detailsEl = document.getElementById(`details-${resultId}`);
+        const iconEl = document.getElementById(`icon-toggle-${resultId}`);
+        if (!detailsEl) return;
+
+        if (detailsEl.classList.contains('hidden')) {
+            detailsEl.classList.remove('hidden');
+            if (iconEl) iconEl.classList.add('rotate-180');
+        } else {
+            detailsEl.classList.add('hidden');
+            if (iconEl) iconEl.classList.remove('rotate-180');
+        }
+    }
+</script>
+{% endblock %}

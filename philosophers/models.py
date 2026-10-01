@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
 
@@ -202,3 +203,90 @@ class Choice(models.Model):
     def __str__(self):
         status = " [To'g'ri]" if self.is_correct else ""
         return f"{self.text}{status}"
+
+
+class QuizResult(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='quiz_results',
+        verbose_name="Foydalanuvchi"
+    )
+    quiz = models.ForeignKey(
+        Quiz,
+        on_delete=models.CASCADE,
+        related_name='results',
+        verbose_name="Test to'plami"
+    )
+    score = models.PositiveIntegerField(
+        verbose_name="To'g'ri javoblar soni"
+    )
+    total_questions = models.PositiveIntegerField(
+        verbose_name="Jami savollar soni"
+    )
+    percentage = models.PositiveIntegerField(
+        verbose_name="Foiz ko'rsatkichi"
+    )
+    time_spent_seconds = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Sarflangan vaqt (soniya)",
+        blank=True
+    )
+    details = models.JSONField(
+        blank=True,
+        null=True,
+        verbose_name="Batafsil javoblar tahlili"
+    )
+    completed_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Yechilgan sana va vaqt"
+    )
+
+    class Meta:
+        verbose_name = "Test natijasi"
+        verbose_name_plural = "Test natijalari"
+        ordering = ['-completed_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.quiz.title}: {self.score}/{self.total_questions} ({self.percentage}%)"
+
+    @property
+    def formatted_time(self):
+        if not self.time_spent_seconds:
+            return "—"
+        mins = self.time_spent_seconds // 60
+        secs = self.time_spent_seconds % 60
+        if mins > 0:
+            return f"{mins} daq {secs} soniya"
+        return f"{secs} soniya"
+
+    @property
+    def grade_status(self):
+        if self.percentage >= 80:
+            return {
+                'label': "A'lo",
+                'color': "emerald",
+                'badge_class': "bg-emerald-50 text-emerald-700 border-emerald-200",
+                'badge_icon': "🏆"
+            }
+        elif self.percentage >= 60:
+            return {
+                'label': "Yaxshi",
+                'color': "blue",
+                'badge_class': "bg-blue-50 text-blue-700 border-blue-200",
+                'badge_icon': "👍"
+            }
+        elif self.percentage >= 40:
+            return {
+                'label': "Qoniqarli",
+                'color': "amber",
+                'badge_class': "bg-amber-50 text-amber-700 border-amber-200",
+                'badge_icon': "📖"
+            }
+        else:
+            return {
+                'label': "Qoniqarsiz",
+                'color': "red",
+                'badge_class': "bg-red-50 text-red-700 border-red-200",
+                'badge_icon': "⚠️"
+            }

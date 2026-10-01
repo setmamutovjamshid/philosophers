@@ -1,9 +1,10 @@
 import json
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Count, Q
+from django.db.models import Avg, Count, Max, Q, Sum
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
-from .models import Philosopher, Question, Quiz
+from .models import Philosopher, Question, Quiz, QuizResult
 
 
 @login_required
@@ -104,3 +105,116 @@ def quiz_detail_view(request, slug):
         'questions_json': json.dumps(questions_data),
     }
     return render(request, 'philosophers/quiz_detail.html', context)
+
+
+@login_required
+def submit_quiz_view(request, slug):
+    """
+    Test natijalarini serverda qabul qilish, tekshirish va QuizResult ga saqlash.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': "Faqat POST so'rovi qabul qilinadi"}, status=405)
+
+    quiz = get_object_or_404(Quiz, slug=slug, is_active=True)
+    questions = list(quiz.questions.prefetch_related('choices').all())
+
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = {}
+
+    user_answers = data.get('answers', {})
+    time_spent_seconds = int(data.get('time_spent_seconds', 0) or 0)
+
+    correct_count = 0
+    total_questions = len(questions)
+    details = []
+
+    for idx, question in enumerate(questions):
+        selected_choice_idx = user_answers.get(str(idx))
+        if selected_choice_idx is None:
+            selected_choice_idx = user_answers.get(idx)
+
+        choices = list(question.choices.all())
+        correct_choice_idx = next((i for i, c in enumerate(choices) if c.is_correct), -1)
+
+        is_correct = (selected_choice_idx is not None and selected_choice_idx == correct_choice_idx)
+        if is_correct:
+            correct_count += 1
+
+        user_choice_text = (
+            choices[selected_choice_idx].text
+            if (selected_choice_idx is not None and 0 <= selected_choice_idx < len(choices))
+            else "Javob berilmadi"
+        )
+        correct_choice_text = choices[correct_choice_idx].text if correct_choice_idx != -1 else "Belgilanmagan"
+
+        details.append({
+            'question_order': question.order,
+            'question_text': question.text,
+            'user_choice_idx': selected_choice_idx,
+            'user_choice_text': user_choice_text,
+            'correct_choice_idx': correct_choice_idx,
+            'correct_choice_text': correct_choice_text,
+            'is_correct': is_correct,
+            'explanation': question.explanation,
+        })
+
+    percentage = round((correct_count / total_questions) * 100) if total_questions > 0 else 0
+
+    result = QuizResult.objects.create(
+        user=request.user,
+        quiz=quiz,
+        score=correct_count,
+        total_questions=total_questions,
+        percentage=percentage,
+        time_spent_seconds=time_spent_seconds,
+        details=details
+    )
+
+    return JsonResponse({
+        'success': True,
+        'result_id': result.id,
+        'score': correct_count,
+        'total_questions': total_questions,
+        'percentage': percentage,
+        'message': "Natijangiz 'Natijalarim' bo'limiga muvaffaqiyatli saqlandi!"
+    })
+
+
+@login_required
+def my_results_view(request):
+    """
+    'Natijalarim' bo'limi:
+    Foydalanuvchi ishlagan barcha testlarning umumiy statistikasi va har bir natija tarixi.
+    """
+    results_qs = QuizResult.objects.filter(user=request.user).select_related('quiz')
+
+    stats = results_qs.aggregate(
+        total_tests=Count('id'),
+        avg_percentage=Avg('percentage'),
+        max_percentage=Max('percentage'),
+        total_correct=Sum('score'),
+        total_questions=Sum('total_questions'),
+    )
+
+    total_tests = stats['total_tests'] or 0
+    avg_percentage = round(stats['avg_percentage']) if stats['avg_percentage'] is not None else 0
+    max_percentage = stats['max_percentage'] or 0
+    total_correct = stats['total_correct'] or 0
+    total_questions = stats['total_questions'] or 0
+
+    paginator = Paginator(results_qs, 10)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'results': page_obj,
+        'page_obj': page_obj,
+        'total_tests': total_tests,
+        'avg_percentage': avg_percentage,
+        'max_percentage': max_percentage,
+        'total_correct': total_correct,
+        'total_questions': total_questions,
+    }
+    return render(request, 'philosophers/my_results.html', context)

@@ -1,11 +1,18 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
-from .models import Choice, Philosopher, Question, Quiz
+from .models import Choice, Philosopher, Question, Quiz, QuizResult
 
 User = get_user_model()
 
 
+@override_settings(
+    STATICFILES_STORAGE='django.contrib.staticfiles.storage.StaticFilesStorage',
+    STORAGES={
+        'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+        'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+    }
+)
 class PhilosopherViewsTests(TestCase):
     def setUp(self):
         self.p1 = Philosopher.objects.create(
@@ -38,6 +45,13 @@ class PhilosopherViewsTests(TestCase):
             text="Faqat matematika",
             is_correct=False
         )
+
+        self.user = User.objects.create_user(
+            username='falsafachi',
+            email='falsafa@example.com',
+            password='Password123'
+        )
+        self.client.force_login(self.user)
 
     def test_learn_page_status(self):
         response = self.client.get(reverse('learn'))
@@ -86,3 +100,55 @@ class PhilosopherViewsTests(TestCase):
         response_quiz = self.client.get('/admin/philosophers/quiz/')
         self.assertEqual(response_quiz.status_code, 200)
         self.assertContains(response_quiz, 'Test 1')
+
+    def test_my_results_page_empty(self):
+        response = self.client.get(reverse('my_results'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'philosophers/my_results.html')
+        self.assertContains(response, 'Hozircha test natijalari mavjud emas')
+
+    def test_submit_quiz_view_creates_result(self):
+        import json
+        payload = {
+            'answers': {'0': 0},  # choice1 is correct (index 0)
+            'time_spent_seconds': 45
+        }
+        url = reverse('submit_quiz', kwargs={'slug': self.quiz.slug})
+        response = self.client.post(
+            url,
+            data=json.dumps(payload),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+        self.assertEqual(data['score'], 1)
+        self.assertEqual(data['total_questions'], 1)
+        self.assertEqual(data['percentage'], 100)
+
+        # Check DB entry
+        result = QuizResult.objects.filter(user=self.user, quiz=self.quiz).first()
+        self.assertIsNotNone(result)
+        self.assertEqual(result.score, 1)
+        self.assertEqual(result.percentage, 100)
+        self.assertEqual(result.time_spent_seconds, 45)
+
+    def test_my_results_page_with_data(self):
+        QuizResult.objects.create(
+            user=self.user,
+            quiz=self.quiz,
+            score=1,
+            total_questions=1,
+            percentage=100,
+            time_spent_seconds=30
+        )
+        response = self.client.get(reverse('my_results'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Test 1')
+        self.assertContains(response, '100%')
+        self.assertContains(response, "A&#x27;lo")
+
+    def test_my_results_unauthenticated_redirects(self):
+        self.client.logout()
+        response = self.client.get(reverse('my_results'))
+        self.assertEqual(response.status_code, 302)
