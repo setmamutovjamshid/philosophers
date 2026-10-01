@@ -60,58 +60,6 @@
             </div>
         </div>
 
-        <!-- User Test Results Summary -->
-        <div class="mt-8 p-6 rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50/40 border border-slate-200/80">
-            <div class="flex items-center justify-between gap-4 mb-4">
-                <div class="flex items-center gap-2.5">
-                    <span class="text-xl">📊</span>
-                    <h2 class="text-lg font-bold text-slate-900">Mening Test Natijalarim</h2>
-                </div>
-                <a href="{% url 'my_results' %}" class="text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1">
-                    Barcha natijalar →
-                </a>
-            </div>
-
-            {% if total_tests > 0 %}
-                <div class="grid grid-cols-2 sm:grid-cols-2 gap-3 mb-4">
-                    <div class="p-3.5 rounded-xl bg-white border border-slate-200/60 shadow-xs">
-                        <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Topshirilgan testlar</div>
-                        <div class="text-xl font-bold text-slate-900 mt-0.5">{{ total_tests }} ta</div>
-                    </div>
-                    <div class="p-3.5 rounded-xl bg-white border border-slate-200/60 shadow-xs">
-                        <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">O'rtacha ko'rsatkich</div>
-                        <div class="text-xl font-bold {% if avg_score >= 70 %}text-emerald-600{% elif avg_score >= 50 %}text-blue-600{% else %}text-amber-600{% endif %} mt-0.5">{{ avg_score }}%</div>
-                    </div>
-                </div>
-
-                <div class="space-y-2">
-                    {% for res in recent_results %}
-                        <div class="p-3 rounded-xl bg-white border border-slate-100 flex items-center justify-between gap-3 text-xs sm:text-sm">
-                            <div class="font-semibold text-slate-800 truncate">
-                                {{ res.quiz.title }}
-                            </div>
-                            <div class="flex items-center gap-2 flex-shrink-0">
-                                <span class="font-bold {% if res.percentage >= 80 %}text-emerald-600{% elif res.percentage >= 60 %}text-blue-600{% else %}text-amber-600{% endif %}">
-                                    {{ res.score }}/{{ res.total_questions }} ({{ res.percentage }}%)
-                                </span>
-                                <span class="text-slate-400 hidden sm:inline text-xs">
-                                    {{ res.completed_at|date:"d.m.Y" }}
-                                </span>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="text-center py-6 px-4 bg-white/70 rounded-xl border border-slate-200/60">
-                    <p class="text-xs sm:text-sm text-slate-500 mb-3">
-                        Siz hali testlar bo'limidagi testlarni topshirmagansiz.
-                    </p>
-                    <a href="{% url 'tests' %}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition shadow-sm">
-                        Testlarni yechishni boshlash
-                    </a>
-                </div>
-            {% endif %}
-        </div>
 
         <!-- Security status indicator -->
         <div class="mt-8 p-5 rounded-2xl bg-blue-50/60 border border-blue-100 text-blue-900 flex items-center gap-3">

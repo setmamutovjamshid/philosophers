@@ -57,21 +57,11 @@ def logout_view(request):
 
 @login_required
 def dashboard_view(request):
-    results_qs = request.user.quiz_results.select_related('quiz')
-    total_tests = results_qs.count()
-    recent_results = results_qs[:5]
-    avg_score = 0
-    if total_tests > 0:
-        from django.db.models import Avg
-        avg_score = round(results_qs.aggregate(Avg('percentage'))['percentage__avg'] or 0)
-
     context = {
         'user': request.user,
-        'total_tests': total_tests,
-        'avg_score': avg_score,
-        'recent_results': recent_results,
     }
     return render(request, 'users/dashboard.html', context)
+
 
 
 @login_required

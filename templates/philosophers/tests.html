@@ -27,9 +27,10 @@
     </div>
 
     <!-- Test Sets Grid -->
-    {% if quizzes %}
+    {% if quizzes_with_status %}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {% for quiz in quizzes %}
+            {% for item in quizzes_with_status %}
+                {% with quiz=item.quiz last_result=item.last_result %}
                 <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-xl hover:border-blue-300 transition-all duration-300 p-6 flex flex-col justify-between group">
                     <div>
                         <!-- Header badge & Order -->
@@ -60,20 +61,64 @@
                                 Ushbu test to'plami bo'yicha 10 ta maxsus saralangan savollar.
                             </p>
                         {% endif %}
+
+                        <!-- Avvalgi natija badge -->
+                        {% if last_result %}
+                            <div class="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl
+                                {% if last_result.percentage >= 80 %}bg-emerald-50 border border-emerald-200 text-emerald-700
+                                {% elif last_result.percentage >= 60 %}bg-blue-50 border border-blue-200 text-blue-700
+                                {% elif last_result.percentage >= 40 %}bg-amber-50 border border-amber-200 text-amber-700
+                                {% else %}bg-red-50 border border-red-200 text-red-700{% endif %}">
+                                <span class="text-sm">
+                                    {% if last_result.percentage >= 80 %}🏆
+                                    {% elif last_result.percentage >= 60 %}👍
+                                    {% elif last_result.percentage >= 40 %}📖
+                                    {% else %}⚠️{% endif %}
+                                </span>
+                                <span class="text-xs font-semibold">
+                                    Oxirgi natija: {{ last_result.score }}/{{ last_result.total_questions }} — {{ last_result.percentage }}%
+                                </span>
+                            </div>
+                        {% endif %}
                     </div>
 
                     <!-- Footer Action -->
                     <div class="mt-6 pt-5 border-t border-slate-100">
                         {% if quiz.total_questions > 0 %}
-                            <a
-                                href="{% url 'quiz_detail' slug=quiz.slug %}"
-                                class="w-full py-2.5 px-4 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:scale-[0.99] transition shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 group-hover:bg-blue-700"
-                            >
-                                <span>Testni boshlash</span>
-                                <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                </svg>
-                            </a>
+                            {% if last_result %}
+                                <!-- Avval ishlangan — 2 ta tugma -->
+                                <div class="flex flex-col gap-2">
+                                    <a
+                                        href="{% url 'quiz_detail' slug=quiz.slug %}"
+                                        class="w-full py-2.5 px-4 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:scale-[0.99] transition shadow-md shadow-blue-500/20 flex items-center justify-center gap-2"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                        </svg>
+                                        <span>Qayta ishlash</span>
+                                    </a>
+                                    <a
+                                        href="{% url 'my_results' %}#result-card-{{ last_result.id }}"
+                                        class="w-full py-2.5 px-4 rounded-xl text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 active:scale-[0.99] transition flex items-center justify-center gap-2"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                        </svg>
+                                        <span>Tahlil qilish</span>
+                                    </a>
+                                </div>
+                            {% else %}
+                                <!-- Hali ishlanmagan — bitta boshlash tugmasi -->
+                                <a
+                                    href="{% url 'quiz_detail' slug=quiz.slug %}"
+                                    class="w-full py-2.5 px-4 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:scale-[0.99] transition shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 group-hover:bg-blue-700"
+                                >
+                                    <span>Testni boshlash</span>
+                                    <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                    </svg>
+                                </a>
+                            {% endif %}
                         {% else %}
                             <div class="text-center py-2 text-xs text-slate-400 font-medium">
                                 Savollar tez kunda kiritiladi
@@ -81,6 +126,7 @@
                         {% endif %}
                     </div>
                 </div>
+                {% endwith %}
             {% endfor %}
         </div>
     {% else %}

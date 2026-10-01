@@ -56,13 +56,34 @@ def tests_view(request):
     'Testlar' bo'limi:
     Admin paneldan kiritilgan Test 1, Test 2... to'plamlarini ko'rsatish.
     Optimizatsiya: annotate orqali savollar sonini 1 ta so'rovda hisoblaydi.
+    Foydalanuvchi avval ishlagan quizlar uchun oxirgi natija ham uzatiladi.
     """
     quizzes = Quiz.objects.filter(is_active=True).annotate(
         total_questions=Count('questions')
     ).order_by('order', 'id')
 
+    # Foydalanuvchining har bir quiz uchun oxirgi natijasini topamiz
+    # (SQLite va PostgreSQL ikkisida ham ishlaydi)
+    all_user_results = QuizResult.objects.filter(
+        user=request.user
+    ).order_by('-completed_at').select_related('quiz')
+
+    last_result_map = {}
+    for r in all_user_results:
+        if r.quiz_id not in last_result_map:
+            last_result_map[r.quiz_id] = r
+
+    quizzes_with_status = []
+    for quiz in quizzes:
+        last_result = last_result_map.get(quiz.id)
+        quizzes_with_status.append({
+            'quiz': quiz,
+            'last_result': last_result,
+        })
+
     context = {
         'quizzes': quizzes,
+        'quizzes_with_status': quizzes_with_status,
     }
     return render(request, 'philosophers/tests.html', context)
 
@@ -186,25 +207,52 @@ def submit_quiz_view(request, slug):
 def my_results_view(request):
     """
     'Natijalarim' bo'limi:
-    Foydalanuvchi ishlagan barcha testlarning umumiy statistikasi va har bir natija tarixi.
+    Har bir quiz uchun faqat oxirgi (eng so'nggi) natija ko'rsatiladi.
+    Urinishlar soni va umumiy statistika ham uzatiladi.
     """
-    results_qs = QuizResult.objects.filter(user=request.user).select_related('quiz')
+    all_results = QuizResult.objects.filter(user=request.user).select_related('quiz')
 
-    stats = results_qs.aggregate(
-        total_tests=Count('id'),
+    # Umumiy statistika — barcha urinishlar bo'yicha
+    stats = all_results.aggregate(
+        total_attempts=Count('id'),
         avg_percentage=Avg('percentage'),
         max_percentage=Max('percentage'),
         total_correct=Sum('score'),
-        total_questions=Sum('total_questions'),
+        total_questions_sum=Sum('total_questions'),
     )
 
-    total_tests = stats['total_tests'] or 0
+    total_attempts = stats['total_attempts'] or 0
     avg_percentage = round(stats['avg_percentage']) if stats['avg_percentage'] is not None else 0
     max_percentage = stats['max_percentage'] or 0
     total_correct = stats['total_correct'] or 0
-    total_questions = stats['total_questions'] or 0
+    total_questions_all = stats['total_questions_sum'] or 0
 
-    paginator = Paginator(results_qs, 10)
+    # Har bir quiz uchun urinishlar soni
+    attempts_per_quiz = (
+        all_results.values('quiz_id')
+        .annotate(attempt_count=Count('id'))
+    )
+    attempt_count_map = {row['quiz_id']: row['attempt_count'] for row in attempts_per_quiz}
+
+    # Har bir quiz uchun faqat oxirgi natijani olish (Python da filtrlash — SQLite mos)
+    last_result_map = {}
+    for r in all_results.order_by('-completed_at'):
+        if r.quiz_id not in last_result_map:
+            last_result_map[r.quiz_id] = r
+
+    # Urinishlar sonini natijaga biriktirish
+    unique_results = []
+    for result in last_result_map.values():
+        result.attempt_count = attempt_count_map.get(result.quiz_id, 1)
+        unique_results.append(result)
+
+    # Oxirgi ishlangan vaqt bo'yicha saralash
+    unique_results.sort(key=lambda r: r.completed_at, reverse=True)
+
+    # Nechta turli quiz ishlangan
+    total_tests = len(unique_results)
+
+    paginator = Paginator(unique_results, 10)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
 
@@ -212,9 +260,10 @@ def my_results_view(request):
         'results': page_obj,
         'page_obj': page_obj,
         'total_tests': total_tests,
+        'total_attempts': total_attempts,
         'avg_percentage': avg_percentage,
         'max_percentage': max_percentage,
         'total_correct': total_correct,
-        'total_questions': total_questions,
+        'total_questions': total_questions_all,
     }
     return render(request, 'philosophers/my_results.html', context)

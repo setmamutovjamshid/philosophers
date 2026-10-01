@@ -91,7 +91,7 @@
                     Natijalar tarixi
                 </h2>
                 <span class="text-xs text-slate-400 font-medium">
-                    Jami {{ results.paginator.count }} ta urinish qayd etilgan
+                    {{ total_tests }} ta test · jami {{ total_attempts }} ta urinish
                 </span>
             </div>
 
@@ -111,6 +111,14 @@
                                         <span>{{ status.label }}</span>
                                     </span>
                                 {% endwith %}
+                                {% if result.attempt_count > 1 %}
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500 border border-slate-200">
+                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                        </svg>
+                                        {{ result.attempt_count }} ta urinish
+                                    </span>
+                                {% endif %}
                             </div>
 
                             <div class="flex items-center gap-4 text-xs text-slate-500 flex-wrap">
@@ -293,5 +301,37 @@
             if (iconEl) iconEl.classList.remove('rotate-180');
         }
     }
+
+    // Agar URL da #result-card-ID anchor bo'lsa, o'sha kartani ochib scroll qiladi
+    (function () {
+        const hash = window.location.hash;
+        if (!hash || !hash.startsWith('#result-card-')) return;
+
+        const resultId = hash.replace('#result-card-', '');
+        const cardEl = document.getElementById(`result-card-${resultId}`);
+        const detailsEl = document.getElementById(`details-${resultId}`);
+        const iconEl = document.getElementById(`icon-toggle-${resultId}`);
+
+        if (!cardEl) return;
+
+        // Tahlil qismini ochish
+        if (detailsEl && detailsEl.classList.contains('hidden')) {
+            detailsEl.classList.remove('hidden');
+            if (iconEl) iconEl.classList.add('rotate-180');
+        }
+
+        // Smooth scroll
+        setTimeout(function () {
+            cardEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Kartani bir oz ajratib ko'rsatish
+            cardEl.style.transition = 'box-shadow 0.3s ease, border-color 0.3s ease';
+            cardEl.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.35)';
+            cardEl.style.borderColor = 'rgb(147, 197, 253)';
+            setTimeout(function () {
+                cardEl.style.boxShadow = '';
+                cardEl.style.borderColor = '';
+            }, 2500);
+        }, 150);
+    })();
 </script>
 {% endblock %}
