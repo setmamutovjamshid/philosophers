@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Falsafa Olami{% endblock %}</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
+    <script nonce="{{ csp_nonce }}">
         tailwind.config = {
             theme: {
                 extend: {
@@ -107,7 +106,7 @@
                         </form>
 
                         <!-- Mobile Menu Button -->
-                        <button type="button" onclick="document.getElementById('mobileMenu').classList.toggle('hidden')" class="md:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100">
+                        <button type="button" id="mobileMenuToggle" class="md:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100">
                             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
                             </svg>
@@ -183,7 +182,7 @@
                     <div class="flex-1 text-sm font-medium">
                         {{ message }}
                     </div>
-                    <button type="button" onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 transition">
+                    <button type="button" class="msg-close-btn text-slate-400 hover:text-slate-600 transition">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -221,5 +220,24 @@
     </footer>
 
     {% block extra_scripts %}{% endblock %}
+
+    <!-- CSP-compliant event listeners (onclick o'rniga) -->
+    <script nonce="{{ csp_nonce }}">
+        // Mobile menu toggle
+        var menuBtn = document.getElementById('mobileMenuToggle');
+        if (menuBtn) {
+            menuBtn.addEventListener('click', function() {
+                var menu = document.getElementById('mobileMenu');
+                if (menu) menu.classList.toggle('hidden');
+            });
+        }
+
+        // Xabar yopish tugmalari
+        document.querySelectorAll('.msg-close-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                this.closest('[role="alert"]').remove();
+            });
+        });
+    </script>
 </body>
 </html>

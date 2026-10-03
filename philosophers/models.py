@@ -67,10 +67,8 @@ class Philosopher(models.Model):
         verbose_name = "Faylasuf"
         verbose_name_plural = "Faylasuflar"
         ordering = ['name']
-        indexes = [
-            models.Index(fields=['name']),
-            models.Index(fields=['era']),
-        ]
+        # db_index=True orqali name va era maydonlarida alohida indekslar yaratilgan,
+        # shuning uchun bu yerda takror qo'shilmaydi.
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -296,31 +294,15 @@ class QuizResult(models.Model):
 
     @property
     def grade_status(self):
+        """
+        Foiz ko'rsatkichi asosida baho darajasini qaytaradi.
+        UI classlari model ichida emas, templateda boshqariladi.
+        """
         if self.percentage >= 80:
-            return {
-                'label': "A'lo",
-                'color': "emerald",
-                'badge_class': "bg-emerald-50 text-emerald-700 border-emerald-200",
-                'badge_icon': "🏆"
-            }
+            return {'label': "A'lo", 'level': 'excellent', 'badge_icon': "🏆"}
         elif self.percentage >= 60:
-            return {
-                'label': "Yaxshi",
-                'color': "blue",
-                'badge_class': "bg-blue-50 text-blue-700 border-blue-200",
-                'badge_icon': "👍"
-            }
+            return {'label': "Yaxshi", 'level': 'good', 'badge_icon': "👍"}
         elif self.percentage >= 40:
-            return {
-                'label': "Qoniqarli",
-                'color': "amber",
-                'badge_class': "bg-amber-50 text-amber-700 border-amber-200",
-                'badge_icon': "📖"
-            }
+            return {'label': "Qoniqarli", 'level': 'satisfactory', 'badge_icon': "📖"}
         else:
-            return {
-                'label': "Qoniqarsiz",
-                'color': "red",
-                'badge_class': "bg-red-50 text-red-700 border-red-200",
-                'badge_icon': "⚠️"
-            }
+            return {'label': "Qoniqarsiz", 'level': 'poor', 'badge_icon': "⚠️"}

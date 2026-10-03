@@ -157,7 +157,7 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script>
+<script nonce="{{ csp_nonce }}">
     // Parol ko'rsatish/yashirish
     function togglePasswordVisibility(inputId, button) {
         const input = document.getElementById(inputId);

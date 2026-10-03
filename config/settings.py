@@ -24,7 +24,7 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 't')
 
-allowed_hosts_raw = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.onrender.com,*')
+allowed_hosts_raw = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.onrender.com')
 ALLOWED_HOSTS = [h.strip() for h in allowed_hosts_raw.split(',') if h.strip()]
 
 csrf_trusted_raw = os.environ.get('CSRF_TRUSTED_ORIGINS', 'https://*.onrender.com')
@@ -46,6 +46,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Production static files serving
+    'config.middleware.SecurityHeadersMiddleware',  # CSP nonce va xavfsizlik headerlari
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -66,6 +67,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'config.context_processors.csp_nonce',  # CSP nonce barcha template'larga
             ],
         },
     },
@@ -163,12 +165,11 @@ else:
     }
 
 
-# Email
-MAILERS = {
-    'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
-    },
-}
+# Email (lokal muhitda console ga chiqaradi, production'da .env orqali SMTP o'rnatiladi)
+EMAIL_BACKEND = os.environ.get(
+    'EMAIL_BACKEND',
+    'django.core.mail.backends.console.EmailBackend'
+)
 
 # Custom User Model
 AUTH_USER_MODEL = 'users.CustomUser'
@@ -179,4 +180,31 @@ LOGOUT_REDIRECT_URL = 'login'
 LOGIN_URL = 'signup'
 
 # Admin faollashtirish maxfiy kaliti (Render Free da Shell bo'lmaganda)
-ADMIN_SETUP_SECRET = os.environ.get('ADMIN_SETUP_SECRET', 'falsafa2026')
+# MUHIM: .env faylida ADMIN_SETUP_SECRET o'rnatilmasa, xususiyat o'chiq bo'ladi.
+ADMIN_SETUP_SECRET = os.environ.get('ADMIN_SETUP_SECRET')
+
+
+# =============================================================================
+# XAVFSIZLIK SOZLAMALARI (Production)
+# =============================================================================
+
+# Render HTTPS ni load balancer darajasida hal qiladi.
+# Django'ga X-Forwarded-Proto headerini HTTPS belgisi sifatida tanishtirish:
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+if not DEBUG:
+    # HSTS: brauzerga faqat HTTPS orqali muloqot qilishni buyuradi (2 yil)
+    SECURE_HSTS_SECONDS = 63072000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+    # Cookie'larni faqat HTTPS orqali yuborish
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+    # Cookie'larni JavaScript dan himoya qilish
+    SESSION_COOKIE_HTTPONLY = True
+
+    # SameSite: CSRF hujumlaridan qo'shimcha himoya
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    CSRF_COOKIE_SAMESITE = 'Lax'

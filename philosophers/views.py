@@ -242,10 +242,10 @@ def my_results_view(request):
     Har bir quiz uchun faqat oxirgi (eng so'nggi) natija ko'rsatiladi.
     Urinishlar soni va umumiy statistika ham uzatiladi.
     """
-    all_results = QuizResult.objects.filter(user=request.user).select_related('quiz')
+    base_qs = QuizResult.objects.filter(user=request.user).select_related('quiz')
 
-    # Umumiy statistika — barcha urinishlar bo'yicha
-    stats = all_results.aggregate(
+    # Umumiy statistika — barcha urinishlar bo'yicha (bitta aggregate so'rovi)
+    stats = base_qs.aggregate(
         total_attempts=Count('id'),
         avg_percentage=Avg('percentage'),
         max_percentage=Max('percentage'),
@@ -259,27 +259,23 @@ def my_results_view(request):
     total_correct = stats['total_correct'] or 0
     total_questions_all = stats['total_questions_sum'] or 0
 
-    # Har bir quiz uchun urinishlar soni
-    attempts_per_quiz = (
-        all_results.values('quiz_id')
-        .annotate(attempt_count=Count('id'))
-    )
-    attempt_count_map = {row['quiz_id']: row['attempt_count'] for row in attempts_per_quiz}
+    # Barcha natijalar — bitta DB so'rovi, xotiraga yuklanadi (list())
+    # -completed_at bo'yicha tartiblangan bo'lgani uchun Python da sort kerak emas
+    all_results = list(base_qs.order_by('-completed_at'))
 
-    # Har bir quiz uchun faqat oxirgi natijani olish (Python da filtrlash — SQLite mos)
+    # Har bir quiz uchun urinishlar soni va oxirgi natija — bitta o'tishda
+    attempt_count_map = {}
     last_result_map = {}
-    for r in all_results.order_by('-completed_at'):
+    for r in all_results:
+        attempt_count_map[r.quiz_id] = attempt_count_map.get(r.quiz_id, 0) + 1
         if r.quiz_id not in last_result_map:
             last_result_map[r.quiz_id] = r
 
-    # Urinishlar sonini natijaga biriktirish
+    # Urinishlar sonini natijaga biriktirish (already sorted by -completed_at)
     unique_results = []
     for result in last_result_map.values():
         result.attempt_count = attempt_count_map.get(result.quiz_id, 1)
         unique_results.append(result)
-
-    # Oxirgi ishlangan vaqt bo'yicha saralash
-    unique_results.sort(key=lambda r: r.completed_at, reverse=True)
 
     # Nechta turli quiz ishlangan
     total_tests = len(unique_results)
@@ -299,3 +295,4 @@ def my_results_view(request):
         'total_questions': total_questions_all,
     }
     return render(request, 'philosophers/my_results.html', context)
+

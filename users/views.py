@@ -68,12 +68,19 @@ def dashboard_view(request):
 def make_admin_view(request):
     """
     Render Free versiyasida Shell bo'lmaganda bir martalik admin (superuser) huquqini faollashtirish.
+    MUHIM: Bu view faqat .env da ADMIN_SETUP_SECRET o'rnatilgan bo'lsagina ishlaydi.
     """
-    secret = (request.POST.get('secret') or request.GET.get('secret', '')).strip()
-    expected_secret = getattr(settings, 'ADMIN_SETUP_SECRET', 'falsafa2026')
+    expected_secret = getattr(settings, 'ADMIN_SETUP_SECRET', None)
+
+    # Agar .env da secret o'rnatilmagan bo'lsa — xususiyat o'chiq
+    if not expected_secret:
+        messages.error(request, "Bu xususiyat hozirda faol emas.")
+        return redirect('learn')
+
+    secret = request.POST.get('secret', '').strip()
     error = None
 
-    if request.method == 'POST' or 'secret' in request.GET:
+    if request.method == 'POST':
         if secret == expected_secret:
             request.user.is_staff = True
             request.user.is_superuser = True
@@ -87,3 +94,4 @@ def make_admin_view(request):
             error = "Maxfiy kalit noto'g'ri kiritildi!"
 
     return render(request, 'users/make_admin.html', {'error': error})
+
