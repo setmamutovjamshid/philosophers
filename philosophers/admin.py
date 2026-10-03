@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from .models import Choice, Philosopher, Question, Quiz, QuizResult
+from .models import Aphorism, Choice, Philosopher, Question, Quiz, QuizResult
 
 
 @admin.register(Philosopher)
@@ -48,6 +48,20 @@ class PhilosopherAdmin(admin.ModelAdmin):
             )
         return "Rasm yuklanmagan"
     image_display.short_description = "Joriy rasm"
+
+
+@admin.register(Aphorism)
+class AphorismAdmin(admin.ModelAdmin):
+    list_display = ('text_preview', 'philosopher', 'is_published', 'order', 'created_at')
+    list_editable = ('is_published', 'order')
+    list_filter = ('is_published', 'philosopher__era')
+    search_fields = ('text', 'philosopher__name')
+    autocomplete_fields = ('philosopher',)
+    ordering = ('philosopher__name', 'order', '-created_at')
+
+    def text_preview(self, obj):
+        return obj.text[:80] + "..." if len(obj.text) > 80 else obj.text
+    text_preview.short_description = "Aforizm"
 
 
 class ChoiceInline(admin.TabularInline):

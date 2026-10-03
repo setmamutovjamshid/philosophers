@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
-from .models import Choice, Philosopher, Question, Quiz, QuizResult
+from .models import Aphorism, Choice, Philosopher, Question, Quiz, QuizResult
 
 User = get_user_model()
 
@@ -52,6 +52,38 @@ class PhilosopherViewsTests(TestCase):
             password='Password123'
         )
         self.client.force_login(self.user)
+
+        self.aphorism = Aphorism.objects.create(
+            philosopher=self.p1,
+            text="Bilim — kuch.",
+            is_published=True,
+        )
+
+    def test_aphorisms_page_status(self):
+        response = self.client.get(reverse('aphorisms'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'philosophers/aphorisms.html')
+        self.assertContains(response, 'Bilim — kuch.')
+        self.assertContains(response, 'Aflotun')
+        self.assertNotContains(response, reverse('philosopher_detail', kwargs={'slug': self.p1.slug}))
+
+    def test_aphorisms_search_by_philosopher_name(self):
+        response = self.client.get(reverse('aphorisms') + '?q=Aflotun')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Bilim — kuch.')
+
+        response2 = self.client.get(reverse('aphorisms') + '?q=Nomalum')
+        self.assertEqual(response2.status_code, 200)
+        self.assertNotContains(response2, 'Bilim — kuch.')
+
+    def test_aphorisms_unpublished_hidden(self):
+        Aphorism.objects.create(
+            philosopher=self.p1,
+            text="Yashirin aforizm",
+            is_published=False,
+        )
+        response = self.client.get(reverse('aphorisms'))
+        self.assertNotContains(response, 'Yashirin aforizm')
 
     def test_learn_page_status(self):
         response = self.client.get(reverse('learn'))

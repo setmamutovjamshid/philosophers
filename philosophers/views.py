@@ -4,7 +4,7 @@ from django.core.paginator import Paginator
 from django.db.models import Avg, Count, Max, Q, Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
-from .models import Philosopher, Question, Quiz, QuizResult
+from .models import Aphorism, Philosopher, Question, Quiz, QuizResult
 
 
 @login_required
@@ -48,6 +48,38 @@ def philosopher_detail_view(request, slug):
         'quotes': quotes,
     }
     return render(request, 'philosophers/detail.html', context)
+
+
+@login_required
+def aphorisms_view(request):
+    """
+    Aforizmlar bo'limi: bitta so'rov (select_related + defer og'ir maydonlar).
+    Qidiruv: faylasuf ismi bo'yicha filtrlash.
+    """
+    query = request.GET.get('q', '').strip()
+
+    aphorisms = (
+        Aphorism.objects.filter(is_published=True)
+        .select_related('philosopher')
+        .defer(
+            'philosopher__biography',
+            'philosopher__main_ideas',
+            'philosopher__famous_quotes',
+        )
+    )
+
+    if query:
+        aphorisms = aphorisms.filter(philosopher__name__icontains=query)
+
+    paginator = Paginator(aphorisms, 20)
+    page_obj = paginator.get_page(request.GET.get('page', 1))
+
+    context = {
+        'aphorisms': page_obj,
+        'page_obj': page_obj,
+        'query': query,
+    }
+    return render(request, 'philosophers/aphorisms.html', context)
 
 
 @login_required

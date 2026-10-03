@@ -93,6 +93,40 @@ class Philosopher(models.Model):
         return [q.strip() for q in self.famous_quotes.split('\n') if q.strip()]
 
 
+class Aphorism(models.Model):
+    philosopher = models.ForeignKey(
+        Philosopher,
+        on_delete=models.CASCADE,
+        related_name='aphorisms',
+        verbose_name="Faylasuf",
+        db_index=True,
+    )
+    text = models.TextField(verbose_name="Aforizm matni")
+    is_published = models.BooleanField(
+        default=True,
+        db_index=True,
+        verbose_name="Saytda ko'rsatilsinmi?",
+    )
+    order = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Tartib",
+        help_text="Kichik raqam yuqorida ko'rinadi.",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Qo'shilgan vaqt")
+
+    class Meta:
+        verbose_name = "Aforizm"
+        verbose_name_plural = "Aforizmlar"
+        ordering = ['order', '-created_at']
+        indexes = [
+            models.Index(fields=['philosopher', 'is_published']),
+        ]
+
+    def __str__(self):
+        preview = self.text[:60] + "..." if len(self.text) > 60 else self.text
+        return f"{self.philosopher.name}: {preview}"
+
+
 class Quiz(models.Model):
     title = models.CharField(
         max_length=200,

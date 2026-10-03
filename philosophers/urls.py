@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import (
+    aphorisms_view,
     my_results_view,
     philosopher_detail_view,
     philosopher_list_view,
@@ -10,6 +11,7 @@ from .views import (
 
 urlpatterns = [
     path('learn/', philosopher_list_view, name='learn'),
+    path('aphorisms/', aphorisms_view, name='aphorisms'),
     path('learn/<slug:slug>/', philosopher_detail_view, name='philosopher_detail'),
     path('tests/', tests_view, name='tests'),
     path('tests/<slug:slug>/', quiz_detail_view, name='quiz_detail'),
