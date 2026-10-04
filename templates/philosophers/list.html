@@ -61,8 +61,7 @@
                                 alt="{{ item.name }}"
                                 loading="lazy"
                                 decoding="async"
-                                class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
-                                onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"
+                                class="philosopher-card-img w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                             />
                             <div class="hidden w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-50 p-6 text-center">
                                 <div class="w-20 h-20 rounded-2xl bg-white shadow-md flex items-center justify-center text-blue-600 text-2xl font-bold mb-2 group-hover:scale-110 transition-transform">
@@ -161,4 +160,17 @@
     {% endif %}
 
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script nonce="{{ csp_nonce }}">
+    // CSP-safe: onerror inline handler o'rniga addEventListener
+    document.querySelectorAll('.philosopher-card-img').forEach(function(img) {
+        img.addEventListener('error', function() {
+            this.style.display = 'none';
+            var fallback = this.nextElementSibling;
+            if (fallback) fallback.classList.remove('hidden');
+        });
+    });
+</script>
 {% endblock %}

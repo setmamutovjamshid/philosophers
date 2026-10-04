@@ -28,8 +28,8 @@
                         <img
                             src="{{ philosopher.image.url }}"
                             alt="{{ philosopher.name }}"
+                            id="philosopherDetailImg"
                             class="w-full h-full object-cover object-top"
-                            onerror="this.style.display='none'; document.getElementById('imageFallback').classList.remove('hidden');"
                         />
                         <div id="imageFallback" class="hidden w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 text-blue-600 p-6 text-center">
                             <span class="text-5xl font-black mb-2">{{ philosopher.name|first|upper }}</span>
@@ -150,4 +150,20 @@
     </div>
 
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if philosopher.image %}
+<script nonce="{{ csp_nonce }}">
+    // CSP-safe: onerror inline handler o'rniga addEventListener
+    var philosopherImg = document.getElementById('philosopherDetailImg');
+    if (philosopherImg) {
+        philosopherImg.addEventListener('error', function() {
+            this.style.display = 'none';
+            var fallback = document.getElementById('imageFallback');
+            if (fallback) fallback.classList.remove('hidden');
+        });
+    }
+</script>
+{% endif %}
 {% endblock %}

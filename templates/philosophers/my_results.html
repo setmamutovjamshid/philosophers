@@ -166,8 +166,8 @@
                             {% if result.details %}
                                 <button
                                     type="button"
-                                    onclick="toggleDetails('{{ result.id }}')"
-                                    class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition flex items-center gap-1.5 cursor-pointer"
+                                    data-result-id="{{ result.id }}"
+                                    class="toggle-details-btn px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition flex items-center gap-1.5 cursor-pointer"
                                     id="btn-toggle-{{ result.id }}"
                                 >
                                     <span>Tahlilni ko'rish</span>
@@ -305,6 +305,13 @@
             if (iconEl) iconEl.classList.remove('rotate-180');
         }
     }
+
+    // CSP-safe: onclick o'rniga addEventListener
+    document.querySelectorAll('.toggle-details-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            toggleDetails(this.dataset.resultId);
+        });
+    });
 
     // Agar URL da #result-card-ID anchor bo'lsa, o'sha kartani ochib scroll qiladi
     (function () {
