@@ -136,33 +136,39 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # =============================================================================
 # MEDIA / CLOUD STORAGE — S3-compatible (Supabase Storage, Neon, AWS S3)
 # =============================================================================
-STORAGE_ENDPOINT   = (
+def _clean_env(val, default=None):
+    if val:
+        cleaned = val.strip().strip('"\'')
+        return cleaned if cleaned else default
+    return default
+
+STORAGE_ENDPOINT   = _clean_env(
     os.environ.get('SUPABASE_STORAGE_ENDPOINT') or
     os.environ.get('AWS_ENDPOINT_URL_S3') or
     os.environ.get('NEON_STORAGE_ENDPOINT') or
     os.environ.get('AWS_S3_ENDPOINT_URL')
 )
-STORAGE_ACCESS_KEY = (
+STORAGE_ACCESS_KEY = _clean_env(
     os.environ.get('SUPABASE_STORAGE_ACCESS_KEY') or
     os.environ.get('AWS_ACCESS_KEY_ID') or
     os.environ.get('NEON_STORAGE_ACCESS_KEY')
 )
-STORAGE_SECRET_KEY = (
+STORAGE_SECRET_KEY = _clean_env(
     os.environ.get('SUPABASE_STORAGE_SECRET_KEY') or
     os.environ.get('AWS_SECRET_ACCESS_KEY') or
     os.environ.get('NEON_STORAGE_SECRET_KEY')
 )
-STORAGE_BUCKET     = (
+STORAGE_BUCKET     = _clean_env(
     os.environ.get('SUPABASE_STORAGE_BUCKET') or
     os.environ.get('AWS_STORAGE_BUCKET_NAME') or
-    os.environ.get('NEON_STORAGE_BUCKET') or
-    'media'
+    os.environ.get('NEON_STORAGE_BUCKET'),
+    default='media'
 )
-STORAGE_REGION     = (
+STORAGE_REGION     = _clean_env(
     os.environ.get('SUPABASE_STORAGE_REGION') or
     os.environ.get('AWS_REGION') or
-    os.environ.get('NEON_STORAGE_REGION') or
-    'ap-southeast-2'
+    os.environ.get('NEON_STORAGE_REGION'),
+    default='ap-southeast-2'
 )
 
 _use_cloud_storage = all([
