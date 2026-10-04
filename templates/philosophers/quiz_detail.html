@@ -53,7 +53,6 @@
                 <button
                     type="button"
                     id="prevBtn"
-                    onclick="goToPreviousQuestion()"
                     class="px-5 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer"
                 >
                     ← Oldingi
@@ -62,7 +61,6 @@
                 <button
                     type="button"
                     id="nextBtn"
-                    onclick="goToNextQuestion()"
                     class="px-6 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 active:scale-[0.99] transition shadow-md shadow-blue-500/20 cursor-pointer"
                 >
                     Keyingi →
@@ -102,7 +100,7 @@
                 </a>
                 <button
                     type="button"
-                    onclick="restartQuiz()"
+                    id="restartBtn"
                     class="px-6 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition shadow-md shadow-blue-500/20 cursor-pointer"
                 >
                     Qaytadan urinish
@@ -363,6 +361,13 @@
 
     // Initialize first question
     updateQuestionUI();
+
+    // CSP-safe event listeners (onclick o'rniga)
+    document.getElementById('prevBtn').addEventListener('click', goToPreviousQuestion);
+    document.getElementById('nextBtn').addEventListener('click', goToNextQuestion);
+
+    var restartBtn = document.getElementById('restartBtn');
+    if (restartBtn) restartBtn.addEventListener('click', restartQuiz);
 </script>
 {% endif %}
 {% endblock %}
