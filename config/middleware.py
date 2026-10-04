@@ -21,11 +21,12 @@ class SecurityHeadersMiddleware(MiddlewareMixin):
 
         # CSP direktivalari:
         # - script-src: 'unsafe-eval' Tailwind Play CDN uchun zarur (ichida Function() ishlatadi)
+        # - 'unsafe-inline' inline onclick event handlerlar uchun zarur
         # - style-src: 'unsafe-inline' Tailwind dinamik inline style inject qilgani uchun zarur
         # - img-src: Cloudinary + data: (avatar placeholder), blob: (canvas/preview)
         csp_parts = [
             "default-src 'self'",
-            f"script-src 'self' 'nonce-{nonce}' https://cdn.tailwindcss.com 'unsafe-eval'",
+            f"script-src 'self' 'nonce-{nonce}' https://cdn.tailwindcss.com 'unsafe-eval' 'unsafe-inline'",
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
             "font-src 'self' data: https://fonts.gstatic.com",
             "img-src 'self' data: blob: https://res.cloudinary.com",
