@@ -134,61 +134,90 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # =============================================================================
-# MEDIA / CLOUD STORAGE — Neon Object Storage (S3-compatible)
+# MEDIA / CLOUD STORAGE — S3-compatible (Supabase Storage, Neon, AWS S3)
 # =============================================================================
-# Neon Object Storage S3 protokolini qo'llab-quvvatlaydi.
-# Render da deploy qilinganda rasmlar o'chib ketmasligi uchun kerak.
-#
-# Render Dashboard → Environment Variables da quyidagilarni o'rnating:
-#   NEON_STORAGE_ENDPOINT   — masalan: https://us-east-1.storage.neon.tech
-#   NEON_STORAGE_ACCESS_KEY — Access Key ID
-#   NEON_STORAGE_SECRET_KEY — Secret Access Key
-#   NEON_STORAGE_BUCKET     — Bucket nomi
+STORAGE_ENDPOINT   = (
+    os.environ.get('SUPABASE_STORAGE_ENDPOINT') or
+    os.environ.get('AWS_ENDPOINT_URL_S3') or
+    os.environ.get('NEON_STORAGE_ENDPOINT') or
+    os.environ.get('AWS_S3_ENDPOINT_URL')
+)
+STORAGE_ACCESS_KEY = (
+    os.environ.get('SUPABASE_STORAGE_ACCESS_KEY') or
+    os.environ.get('AWS_ACCESS_KEY_ID') or
+    os.environ.get('NEON_STORAGE_ACCESS_KEY')
+)
+STORAGE_SECRET_KEY = (
+    os.environ.get('SUPABASE_STORAGE_SECRET_KEY') or
+    os.environ.get('AWS_SECRET_ACCESS_KEY') or
+    os.environ.get('NEON_STORAGE_SECRET_KEY')
+)
+STORAGE_BUCKET     = (
+    os.environ.get('SUPABASE_STORAGE_BUCKET') or
+    os.environ.get('AWS_STORAGE_BUCKET_NAME') or
+    os.environ.get('NEON_STORAGE_BUCKET') or
+    'media'
+)
+STORAGE_REGION     = (
+    os.environ.get('SUPABASE_STORAGE_REGION') or
+    os.environ.get('AWS_REGION') or
+    os.environ.get('NEON_STORAGE_REGION') or
+    'ap-southeast-2'
+)
 
-NEON_STORAGE_ENDPOINT   = os.environ.get('NEON_STORAGE_ENDPOINT') or os.environ.get('AWS_ENDPOINT_URL_S3')
-NEON_STORAGE_ACCESS_KEY = os.environ.get('NEON_STORAGE_ACCESS_KEY') or os.environ.get('AWS_ACCESS_KEY_ID')
-NEON_STORAGE_SECRET_KEY = os.environ.get('NEON_STORAGE_SECRET_KEY') or os.environ.get('AWS_SECRET_ACCESS_KEY')
-NEON_STORAGE_BUCKET     = os.environ.get('NEON_STORAGE_BUCKET') or os.environ.get('AWS_STORAGE_BUCKET_NAME', 'media')
-NEON_STORAGE_REGION     = os.environ.get('NEON_STORAGE_REGION') or os.environ.get('AWS_REGION', 'us-east-2')
-
-_use_neon_storage = all([
-    NEON_STORAGE_ENDPOINT,
-    NEON_STORAGE_ACCESS_KEY,
-    NEON_STORAGE_SECRET_KEY,
-    NEON_STORAGE_BUCKET,
+_use_cloud_storage = all([
+    STORAGE_ENDPOINT,
+    STORAGE_ACCESS_KEY,
+    STORAGE_SECRET_KEY,
+    STORAGE_BUCKET,
 ])
 
-if _use_neon_storage:
-    # --- Neon Object Storage (S3-compatible) ---
+if _use_cloud_storage:
     INSTALLED_APPS += ['storages']
 
-    # boto3 / S3 sozlamalari
-    AWS_S3_ENDPOINT_URL       = NEON_STORAGE_ENDPOINT
-    AWS_ACCESS_KEY_ID         = NEON_STORAGE_ACCESS_KEY
-    AWS_SECRET_ACCESS_KEY     = NEON_STORAGE_SECRET_KEY
-    AWS_STORAGE_BUCKET_NAME   = NEON_STORAGE_BUCKET
-    AWS_S3_REGION_NAME        = NEON_STORAGE_REGION
+    # S3 sozlamalari
+    AWS_S3_ENDPOINT_URL       = STORAGE_ENDPOINT
+    AWS_ACCESS_KEY_ID         = STORAGE_ACCESS_KEY
+    AWS_SECRET_ACCESS_KEY     = STORAGE_SECRET_KEY
+    AWS_STORAGE_BUCKET_NAME   = STORAGE_BUCKET
+    AWS_S3_REGION_NAME        = STORAGE_REGION
 
-    # Neon Object Storage path-style addressing talab qiladi
+    # S3-compatible provayderlar (Supabase / Neon) path-style addressing talab qiladi
     AWS_S3_ADDRESSING_STYLE    = 'path'
 
-    # Neon Object Storage ACL larni (public-read) qo'llab-quvvatlamaydi (AccessControlListNotSupported xatosi bermasligi uchun None)
+    # Supabase / Neon ACL larni qo'llab-quvvatlamaydi (AccessControlListNotSupported xatosi bo'lmasligi uchun)
     AWS_DEFAULT_ACL            = None
-    AWS_QUERYSTRING_AUTH       = False   # URL larda ?AWSAccessKeyId=... bo'lmasin
+    AWS_QUERYSTRING_AUTH       = False   # URL larda imzo tokenlari bo'lmasin
     AWS_S3_FILE_OVERWRITE      = False   # Bir xil nomli fayl ustiga yozilmasin
     AWS_S3_OBJECT_PARAMETERS   = {'CacheControl': 'max-age=86400'}  # 1 kun kesh
 
-    # Media fayllar (yuklangan rasmlar) uchun
-    MEDIA_URL = f'{NEON_STORAGE_ENDPOINT.rstrip("/")}/{NEON_STORAGE_BUCKET}/media/'
+    # Supabase CDN uchun public URL domeni
+    # Masalan: https://<ref>.storage.supabase.co/storage/v1/s3 -> <ref>.supabase.co/storage/v1/object/public/<bucket>
+    import re
+    sb_match = re.search(r'https?://([^.]+)\.(?:storage\.)?supabase\.co', STORAGE_ENDPOINT)
+    if sb_match:
+        project_ref = sb_match.group(1)
+        s3_custom_domain = f"{project_ref}.supabase.co/storage/v1/object/public/{STORAGE_BUCKET}"
+    else:
+        s3_custom_domain = os.environ.get('AWS_S3_CUSTOM_DOMAIN')
+
+    storage_options = {
+        'addressing_style': 'path',
+        'default_acl': None,
+        'querystring_auth': False,
+    }
+
+    if s3_custom_domain:
+        AWS_S3_CUSTOM_DOMAIN = s3_custom_domain
+        MEDIA_URL = f"https://{s3_custom_domain}/"
+        storage_options['custom_domain'] = s3_custom_domain
+    else:
+        MEDIA_URL = f"{STORAGE_ENDPOINT.rstrip('/')}/{STORAGE_BUCKET}/"
 
     STORAGES = {
         'default': {
             'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',
-            'OPTIONS': {
-                'location': 'media',   # bucket ichida media/ papkasiga joylaydi
-                'addressing_style': 'path',
-                'default_acl': None,
-            },
+            'OPTIONS': storage_options,
         },
         'staticfiles': {
             'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
