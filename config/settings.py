@@ -133,18 +133,40 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Cloud Storage (Render'da rasmlar o'chib ketmasligi uchun Cloudinary)
-CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME')
+# =============================================================================
+# MEDIA / CLOUD STORAGE (Render'da rasmlar o'chib ketmasligi uchun Cloudinary)
+# =============================================================================
+# Cloudinary ni ikki xil usulda ulash mumkin:
+#   1. CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name  (bitta o'zgaruvchi)
+#   2. Uchta alohida: CLOUDINARY_CLOUD_NAME + CLOUDINARY_API_KEY + CLOUDINARY_API_SECRET
 
-if CLOUDINARY_CLOUD_NAME:
-    # Render'da rasmlar o'chmasligi uchun Cloudinary ulanadi
-    INSTALLED_APPS.insert(0, 'cloudinary_storage')
-    INSTALLED_APPS.insert(1, 'cloudinary')
-    CLOUDINARY_STORAGE = {
-        'CLOUD_NAME': CLOUDINARY_CLOUD_NAME,
-        'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
-        'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
-    }
+CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')          # bitta URL sifatida
+CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME')  # yoki alohida
+
+_use_cloudinary = bool(CLOUDINARY_URL or CLOUDINARY_CLOUD_NAME)
+
+if _use_cloudinary:
+    # Cloudinary ulanadi — rasmlar bulutda saqlanadi
+    import cloudinary
+
+    if CLOUDINARY_URL:
+        # cloudinary://api_key:api_secret@cloud_name formatidan foydalanish
+        cloudinary.config(cloudinary_url=CLOUDINARY_URL)
+    else:
+        cloudinary.config(
+            cloud_name=CLOUDINARY_CLOUD_NAME,
+            api_key=os.environ.get('CLOUDINARY_API_KEY'),
+            api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
+            secure=True,
+        )
+        CLOUDINARY_STORAGE = {
+            'CLOUD_NAME': CLOUDINARY_CLOUD_NAME,
+            'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+            'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
+        }
+
+    INSTALLED_APPS += ['cloudinary_storage', 'cloudinary']
+
     STORAGES = {
         'default': {
             'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
@@ -153,8 +175,8 @@ if CLOUDINARY_CLOUD_NAME:
             'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
         },
     }
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 else:
+    # Lokal muhit — oddiy fayl tizimi
     STORAGES = {
         'default': {
             'BACKEND': 'django.core.files.storage.FileSystemStorage',
