@@ -172,8 +172,8 @@ if _use_neon_storage:
     # Neon Object Storage path-style addressing talab qiladi
     AWS_S3_ADDRESSING_STYLE    = 'path'
 
-    # Fayllar public o'qilishi uchun
-    AWS_DEFAULT_ACL            = 'public-read'
+    # Neon Object Storage ACL larni (public-read) qo'llab-quvvatlamaydi (AccessControlListNotSupported xatosi bermasligi uchun None)
+    AWS_DEFAULT_ACL            = None
     AWS_QUERYSTRING_AUTH       = False   # URL larda ?AWSAccessKeyId=... bo'lmasin
     AWS_S3_FILE_OVERWRITE      = False   # Bir xil nomli fayl ustiga yozilmasin
     AWS_S3_OBJECT_PARAMETERS   = {'CacheControl': 'max-age=86400'}  # 1 kun kesh
@@ -187,6 +187,7 @@ if _use_neon_storage:
             'OPTIONS': {
                 'location': 'media',   # bucket ichida media/ papkasiga joylaydi
                 'addressing_style': 'path',
+                'default_acl': None,
             },
         },
         'staticfiles': {
