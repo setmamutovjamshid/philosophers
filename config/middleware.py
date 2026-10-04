@@ -29,7 +29,7 @@ class SecurityHeadersMiddleware(MiddlewareMixin):
             f"script-src 'self' 'nonce-{nonce}' https://cdn.tailwindcss.com 'unsafe-eval' 'unsafe-inline'",
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
             "font-src 'self' data: https://fonts.gstatic.com",
-            "img-src 'self' data: blob: https://res.cloudinary.com",
+            "img-src 'self' data: blob: https://*.supabase.co https://*.storage.supabase.co https://*.neon.tech https://*.amazonaws.com https://res.cloudinary.com https:",
             "connect-src 'self'",
             "frame-ancestors 'none'",
             "base-uri 'self'",
