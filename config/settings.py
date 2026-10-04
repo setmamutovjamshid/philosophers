@@ -134,49 +134,62 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # =============================================================================
-# MEDIA / CLOUD STORAGE (Render'da rasmlar o'chib ketmasligi uchun Cloudinary)
+# MEDIA / CLOUD STORAGE — Neon Object Storage (S3-compatible)
 # =============================================================================
-# Cloudinary ni ikki xil usulda ulash mumkin:
-#   1. CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name  (bitta o'zgaruvchi)
-#   2. Uchta alohida: CLOUDINARY_CLOUD_NAME + CLOUDINARY_API_KEY + CLOUDINARY_API_SECRET
+# Neon Object Storage S3 protokolini qo'llab-quvvatlaydi.
+# Render da deploy qilinganda rasmlar o'chib ketmasligi uchun kerak.
+#
+# Render Dashboard → Environment Variables da quyidagilarni o'rnating:
+#   NEON_STORAGE_ENDPOINT   — masalan: https://us-east-1.storage.neon.tech
+#   NEON_STORAGE_ACCESS_KEY — Access Key ID
+#   NEON_STORAGE_SECRET_KEY — Secret Access Key
+#   NEON_STORAGE_BUCKET     — Bucket nomi
 
-CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')          # bitta URL sifatida
-CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME')  # yoki alohida
+NEON_STORAGE_ENDPOINT   = os.environ.get('NEON_STORAGE_ENDPOINT')
+NEON_STORAGE_ACCESS_KEY = os.environ.get('NEON_STORAGE_ACCESS_KEY')
+NEON_STORAGE_SECRET_KEY = os.environ.get('NEON_STORAGE_SECRET_KEY')
+NEON_STORAGE_BUCKET     = os.environ.get('NEON_STORAGE_BUCKET')
 
-_use_cloudinary = bool(CLOUDINARY_URL or CLOUDINARY_CLOUD_NAME)
+_use_neon_storage = all([
+    NEON_STORAGE_ENDPOINT,
+    NEON_STORAGE_ACCESS_KEY,
+    NEON_STORAGE_SECRET_KEY,
+    NEON_STORAGE_BUCKET,
+])
 
-if _use_cloudinary:
-    # Cloudinary ulanadi — rasmlar bulutda saqlanadi
-    import cloudinary
+if _use_neon_storage:
+    # --- Neon Object Storage (S3-compatible) ---
+    INSTALLED_APPS += ['storages']
 
-    if CLOUDINARY_URL:
-        # cloudinary://api_key:api_secret@cloud_name formatidan foydalanish
-        cloudinary.config(cloudinary_url=CLOUDINARY_URL)
-    else:
-        cloudinary.config(
-            cloud_name=CLOUDINARY_CLOUD_NAME,
-            api_key=os.environ.get('CLOUDINARY_API_KEY'),
-            api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
-            secure=True,
-        )
-        CLOUDINARY_STORAGE = {
-            'CLOUD_NAME': CLOUDINARY_CLOUD_NAME,
-            'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
-            'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
-        }
+    # boto3 / S3 sozlamalari
+    AWS_S3_ENDPOINT_URL       = NEON_STORAGE_ENDPOINT
+    AWS_ACCESS_KEY_ID         = NEON_STORAGE_ACCESS_KEY
+    AWS_SECRET_ACCESS_KEY     = NEON_STORAGE_SECRET_KEY
+    AWS_STORAGE_BUCKET_NAME   = NEON_STORAGE_BUCKET
+    AWS_S3_REGION_NAME        = os.environ.get('NEON_STORAGE_REGION', 'us-east-1')
 
-    INSTALLED_APPS += ['cloudinary_storage', 'cloudinary']
+    # Fayllar public o'qilishi uchun
+    AWS_DEFAULT_ACL            = 'public-read'
+    AWS_QUERYSTRING_AUTH       = False   # URL larda ?AWSAccessKeyId=... bo'lmasin
+    AWS_S3_FILE_OVERWRITE      = False   # Bir xil nomli fayl ustiga yozilmasin
+    AWS_S3_OBJECT_PARAMETERS   = {'CacheControl': 'max-age=86400'}  # 1 kun kesh
+
+    # Media fayllar (yuklangan rasmlar) uchun
+    MEDIA_URL = f'{NEON_STORAGE_ENDPOINT}/{NEON_STORAGE_BUCKET}/media/'
 
     STORAGES = {
         'default': {
-            'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
+            'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',
+            'OPTIONS': {
+                'location': 'media',   # bucket ichida media/ papkasiga joylaydi
+            },
         },
         'staticfiles': {
             'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
         },
     }
 else:
-    # Lokal muhit — oddiy fayl tizimi
+    # Lokal muhit — oddiy fayl tizimi (env variables o'rnatilmagan)
     STORAGES = {
         'default': {
             'BACKEND': 'django.core.files.storage.FileSystemStorage',
