@@ -145,10 +145,11 @@ MEDIA_ROOT = BASE_DIR / 'media'
 #   NEON_STORAGE_SECRET_KEY — Secret Access Key
 #   NEON_STORAGE_BUCKET     — Bucket nomi
 
-NEON_STORAGE_ENDPOINT   = os.environ.get('NEON_STORAGE_ENDPOINT')
-NEON_STORAGE_ACCESS_KEY = os.environ.get('NEON_STORAGE_ACCESS_KEY')
-NEON_STORAGE_SECRET_KEY = os.environ.get('NEON_STORAGE_SECRET_KEY')
-NEON_STORAGE_BUCKET     = os.environ.get('NEON_STORAGE_BUCKET')
+NEON_STORAGE_ENDPOINT   = os.environ.get('NEON_STORAGE_ENDPOINT') or os.environ.get('AWS_ENDPOINT_URL_S3')
+NEON_STORAGE_ACCESS_KEY = os.environ.get('NEON_STORAGE_ACCESS_KEY') or os.environ.get('AWS_ACCESS_KEY_ID')
+NEON_STORAGE_SECRET_KEY = os.environ.get('NEON_STORAGE_SECRET_KEY') or os.environ.get('AWS_SECRET_ACCESS_KEY')
+NEON_STORAGE_BUCKET     = os.environ.get('NEON_STORAGE_BUCKET') or os.environ.get('AWS_STORAGE_BUCKET_NAME', 'media')
+NEON_STORAGE_REGION     = os.environ.get('NEON_STORAGE_REGION') or os.environ.get('AWS_REGION', 'us-east-2')
 
 _use_neon_storage = all([
     NEON_STORAGE_ENDPOINT,
@@ -166,7 +167,10 @@ if _use_neon_storage:
     AWS_ACCESS_KEY_ID         = NEON_STORAGE_ACCESS_KEY
     AWS_SECRET_ACCESS_KEY     = NEON_STORAGE_SECRET_KEY
     AWS_STORAGE_BUCKET_NAME   = NEON_STORAGE_BUCKET
-    AWS_S3_REGION_NAME        = os.environ.get('NEON_STORAGE_REGION', 'us-east-1')
+    AWS_S3_REGION_NAME        = NEON_STORAGE_REGION
+
+    # Neon Object Storage path-style addressing talab qiladi
+    AWS_S3_ADDRESSING_STYLE    = 'path'
 
     # Fayllar public o'qilishi uchun
     AWS_DEFAULT_ACL            = 'public-read'
@@ -175,13 +179,14 @@ if _use_neon_storage:
     AWS_S3_OBJECT_PARAMETERS   = {'CacheControl': 'max-age=86400'}  # 1 kun kesh
 
     # Media fayllar (yuklangan rasmlar) uchun
-    MEDIA_URL = f'{NEON_STORAGE_ENDPOINT}/{NEON_STORAGE_BUCKET}/media/'
+    MEDIA_URL = f'{NEON_STORAGE_ENDPOINT.rstrip("/")}/{NEON_STORAGE_BUCKET}/media/'
 
     STORAGES = {
         'default': {
             'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',
             'OPTIONS': {
                 'location': 'media',   # bucket ichida media/ papkasiga joylaydi
+                'addressing_style': 'path',
             },
         },
         'staticfiles': {
