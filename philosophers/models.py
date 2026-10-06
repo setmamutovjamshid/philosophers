@@ -153,6 +153,12 @@ class Quiz(models.Model):
         verbose_name="Faolmi?",
         help_text="Belgilansa, saytda foydalanuvchilarga ko'rinadi."
     )
+    is_mega = models.BooleanField(
+        default=False,
+        db_index=True,
+        verbose_name="Umumlashtiruvchi mega-testmi?",
+        help_text="Belgilansa, bu test testlar sahifasida alohida 'Mega Test' bloki sifatida ko'rinadi."
+    )
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name="Yaratilgan vaqt"

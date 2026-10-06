@@ -26,7 +26,141 @@
         </div>
     </div>
 
-    <!-- Test Sets Grid -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- MEGA TEST BLOKI — Barcha faylasuflar bo'yicha umumlashtiruvchi -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    {% if mega_quiz %}
+    <div class="mb-12">
+        <!-- Ajralib turuvchi sarlavha chizig'i -->
+        <div class="flex items-center gap-4 mb-6">
+            <div class="flex-1 h-px bg-gradient-to-r from-transparent via-amber-300 to-transparent"></div>
+            <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-50 border border-amber-300 text-amber-800 text-xs font-bold uppercase tracking-widest shadow-sm">
+                <span>🌟</span> Umumlashtiruvchi Mega Test
+            </span>
+            <div class="flex-1 h-px bg-gradient-to-r from-transparent via-amber-300 to-transparent"></div>
+        </div>
+
+        <!-- Mega Test Kartasi -->
+        <div class="relative overflow-hidden rounded-3xl border-2 border-amber-300 shadow-2xl shadow-amber-100 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-0">
+
+            <!-- Dekorativ orqa fon naqshlar -->
+            <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-amber-200/30 to-transparent rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+            <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-orange-200/20 to-transparent rounded-full translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
+
+            <div class="relative z-10 p-7 sm:p-10">
+                <div class="flex flex-col lg:flex-row lg:items-center gap-8">
+
+                    <!-- Chap: Ikon va ma'lumot -->
+                    <div class="flex-1 flex items-start gap-5">
+                        <!-- Trophy ikon -->
+                        <div class="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-3xl sm:text-4xl shadow-lg shadow-amber-300/40">
+                            🏆
+                        </div>
+
+                        <div>
+                            <!-- Badge -->
+                            <div class="flex flex-wrap items-center gap-2 mb-2">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                    </svg>
+                                    {{ mega_quiz.total_questions }} ta savol
+                                </span>
+                                <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-700 border border-orange-200">
+                                    ⚡ Barcha faylasuflar
+                                </span>
+                            </div>
+
+                            <!-- Sarlavha -->
+                            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 leading-tight">
+                                {{ mega_quiz.title }}
+                            </h2>
+
+                            <!-- Tavsif -->
+                            {% if mega_quiz.description %}
+                                <p class="text-slate-600 text-sm sm:text-base mt-2 leading-relaxed max-w-xl">
+                                    {{ mega_quiz.description }}
+                                </p>
+                            {% else %}
+                                <p class="text-slate-500 text-sm mt-2 leading-relaxed max-w-xl">
+                                    Saytdagi <strong>barcha faylasuflar</strong> bo'yicha bilimlaringizni sinaydigan keng qamrovli test. Siz uchun eng katta sinov!
+                                </p>
+                            {% endif %}
+
+                            <!-- Avvalgi natija badge -->
+                            {% if mega_last_result %}
+                                <div class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl
+                                    {% if mega_last_result.percentage >= 80 %}bg-emerald-100 border border-emerald-300 text-emerald-800
+                                    {% elif mega_last_result.percentage >= 60 %}bg-blue-100 border border-blue-300 text-blue-800
+                                    {% elif mega_last_result.percentage >= 40 %}bg-amber-100 border border-amber-300 text-amber-800
+                                    {% else %}bg-red-100 border border-red-300 text-red-800{% endif %}">
+                                    <span class="text-base">
+                                        {% if mega_last_result.percentage >= 80 %}🏆
+                                        {% elif mega_last_result.percentage >= 60 %}👍
+                                        {% elif mega_last_result.percentage >= 40 %}📖
+                                        {% else %}⚠️{% endif %}
+                                    </span>
+                                    <span class="text-sm font-bold">
+                                        Oxirgi natija: {{ mega_last_result.score }}/{{ mega_last_result.total_questions }} — {{ mega_last_result.percentage }}%
+                                    </span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- O'ng: Tugmalar -->
+                    <div class="flex-shrink-0 flex flex-col gap-3 min-w-[180px]">
+                        {% if mega_quiz.total_questions > 0 %}
+                            {% if mega_last_result %}
+                                <a href="{% url 'quiz_detail' slug=mega_quiz.slug %}"
+                                   class="w-full py-3 px-6 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-[0.98] transition shadow-lg shadow-amber-400/30 flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    Qayta ishlash
+                                </a>
+                                <a href="{% url 'my_results' %}#result-card-{{ mega_last_result.id }}"
+                                   class="w-full py-3 px-6 rounded-2xl text-sm font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 active:scale-[0.98] transition border border-amber-300 flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                    </svg>
+                                    Natijani ko'rish
+                                </a>
+                            {% else %}
+                                <a href="{% url 'quiz_detail' slug=mega_quiz.slug %}"
+                                   class="w-full py-3 px-6 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-[0.98] transition shadow-lg shadow-amber-400/30 flex items-center justify-center gap-2">
+                                    <span>Mega testni boshlash</span>
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                    </svg>
+                                </a>
+                                <div class="text-center text-xs text-amber-600 font-semibold">
+                                    ✨ Hali sinalmagan — jasur bo'ling!
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="text-center py-2 text-xs text-slate-400 font-medium">
+                                Savollar tez kunda kiritiladi
+                            </div>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Ajratuvchi pastki chiziq -->
+        <div class="mt-10 flex items-center gap-4">
+            <div class="flex-1 h-px bg-slate-200"></div>
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-widest">Mavzular bo'yicha testlar</span>
+            <div class="flex-1 h-px bg-slate-200"></div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ════════════════════════ -->
+    <!-- Oddiy Test to'plamlari  -->
+    <!-- ════════════════════════ -->
     {% if quizzes_with_status %}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {% for item in quizzes_with_status %}
@@ -129,8 +263,8 @@
                 {% endwith %}
             {% endfor %}
         </div>
-    {% else %}
-        <!-- Empty State -->
+    {% elif not mega_quiz %}
+        <!-- Empty State — na mega, na oddiy testlar mavjud -->
         <div class="text-center max-w-md mx-auto py-16 px-6 bg-white rounded-3xl border border-slate-200 shadow-sm">
             <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-4 text-2xl">
                 ✍️

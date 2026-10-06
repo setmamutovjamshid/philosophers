@@ -89,13 +89,22 @@ def tests_view(request):
     Admin paneldan kiritilgan Test 1, Test 2... to'plamlarini ko'rsatish.
     Optimizatsiya: annotate orqali savollar sonini 1 ta so'rovda hisoblaydi.
     Foydalanuvchi avval ishlagan quizlar uchun oxirgi natija ham uzatiladi.
+    Mega test (is_mega=True) alohida context o'zgaruvchisi sifatida uzatiladi.
     """
-    quizzes = Quiz.objects.filter(is_active=True).annotate(
+    active_quizzes = Quiz.objects.filter(is_active=True).annotate(
         total_questions=Count('questions')
     ).order_by('order', 'id')
 
+    # Mega testni va oddiy testlarni ajratish
+    mega_quiz = None
+    regular_quizzes = []
+    for q in active_quizzes:
+        if q.is_mega:
+            mega_quiz = q
+        else:
+            regular_quizzes.append(q)
+
     # Foydalanuvchining har bir quiz uchun oxirgi natijasini topamiz
-    # (SQLite va PostgreSQL ikkisida ham ishlaydi)
     all_user_results = QuizResult.objects.filter(
         user=request.user
     ).order_by('-completed_at').select_related('quiz')
@@ -106,16 +115,19 @@ def tests_view(request):
             last_result_map[r.quiz_id] = r
 
     quizzes_with_status = []
-    for quiz in quizzes:
+    for quiz in regular_quizzes:
         last_result = last_result_map.get(quiz.id)
         quizzes_with_status.append({
             'quiz': quiz,
             'last_result': last_result,
         })
 
+    mega_last_result = last_result_map.get(mega_quiz.id) if mega_quiz else None
+
     context = {
-        'quizzes': quizzes,
         'quizzes_with_status': quizzes_with_status,
+        'mega_quiz': mega_quiz,
+        'mega_last_result': mega_last_result,
     }
     return render(request, 'philosophers/tests.html', context)
 

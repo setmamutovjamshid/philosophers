@@ -97,11 +97,24 @@ class QuestionInline(admin.TabularInline):
 
 @admin.register(Quiz)
 class QuizAdmin(admin.ModelAdmin):
-    list_display = ('title', 'order', 'questions_count', 'is_active', 'created_at')
+    list_display = ('title', 'order', 'questions_count', 'is_active', 'is_mega_badge', 'created_at')
     list_editable = ('order', 'is_active')
     search_fields = ('title', 'description')
     prepopulated_fields = {'slug': ('title',)}
     inlines = [QuestionInline]
+
+    fieldsets = (
+        ("Asosiy ma'lumotlar", {
+            'fields': ('title', 'slug', 'description', 'order', 'is_active')
+        }),
+        ("⭐ Mega Test sozlamalari", {
+            'fields': ('is_mega',),
+            'description': (
+                "Agar bu testni 'Umumlashtiruvchi Mega Test' sifatida belgilasangiz, "
+                "u testlar sahifasida alohida ajralib turuvchi blok sifatida ko'rinadi."
+            ),
+        }),
+    )
 
     def questions_count(self, obj):
         count = obj.questions.count()
@@ -111,6 +124,15 @@ class QuizAdmin(admin.ModelAdmin):
             color, count
         )
     questions_count.short_description = "Savollar soni"
+
+    def is_mega_badge(self, obj):
+        if obj.is_mega:
+            return mark_safe(
+                '<span style="background:#fef3c7;color:#92400e;padding:2px 10px;'
+                'border-radius:12px;font-weight:bold;font-size:12px;">🏆 Mega Test</span>'
+            )
+        return mark_safe('<span style="color:#94a3b8;font-size:12px;">—</span>')
+    is_mega_badge.short_description = "Mega?"
 
 
 @admin.register(QuizResult)
