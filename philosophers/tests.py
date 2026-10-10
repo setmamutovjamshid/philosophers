@@ -184,3 +184,19 @@ class PhilosopherViewsTests(TestCase):
         self.client.logout()
         response = self.client.get(reverse('my_results'))
         self.assertEqual(response.status_code, 302)
+
+    def test_quiz_questions_order_strictly_preserved(self):
+        Question.objects.create(quiz=self.quiz, order=2, text="2-savol matni")
+        Question.objects.create(quiz=self.quiz, order=3, text="3-savol matni")
+        response = self.client.get(reverse('quiz_detail', kwargs={'slug': self.quiz.slug}))
+        self.assertEqual(response.status_code, 200)
+        questions_in_ctx = list(response.context['questions'])
+        self.assertEqual([q.order for q in questions_in_ctx], [1, 2, 3])
+
+    def test_multiple_quizzes_rendered_in_tests_view(self):
+        q2 = Quiz.objects.create(title="Test 2", order=2, description="2-test")
+        q3 = Quiz.objects.create(title="Test 3", order=3, description="3-test")
+        response = self.client.get(reverse('tests'))
+        self.assertEqual(response.status_code, 200)
+        quizzes = [item['quiz'].id for item in response.context['quizzes_with_status']]
+        self.assertCountEqual(quizzes, [self.quiz.id, q2.id, q3.id])

@@ -1,4 +1,5 @@
 import json
+import random
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Avg, Count, Max, Q, Sum
@@ -54,6 +55,7 @@ def philosopher_detail_view(request, slug):
 def aphorisms_view(request):
     """
     Aforizmlar bo'limi: bitta so'rov (select_related + defer og'ir maydonlar).
+    Har safar kirganda aforizmlar tasodifiy (aralashib) chiqadi.
     Qidiruv: faylasuf ismi bo'yicha filtrlash.
     """
     query = request.GET.get('q', '').strip()
@@ -66,6 +68,7 @@ def aphorisms_view(request):
             'philosopher__main_ideas',
             'philosopher__famous_quotes',
         )
+        .order_by('?')
     )
 
     if query:
@@ -87,19 +90,20 @@ def tests_view(request):
     """
     'Testlar' bo'limi:
     Admin paneldan kiritilgan Test 1, Test 2... to'plamlarini ko'rsatish.
+    Har safar kirganda testlar tasodifiy (aralashgan) tartibda chiqadi.
     Optimizatsiya: annotate orqali savollar sonini 1 ta so'rovda hisoblaydi.
     Foydalanuvchi avval ishlagan quizlar uchun oxirgi natija ham uzatiladi.
     Mega test (is_mega=True) alohida context o'zgaruvchisi sifatida uzatiladi.
     """
     active_quizzes = Quiz.objects.filter(is_active=True).annotate(
         total_questions=Count('questions')
-    ).order_by('order', 'id')
+    )
 
     # Mega testni va oddiy testlarni ajratish
     mega_quiz = None
     regular_quizzes = []
     for q in active_quizzes:
-        if q.is_mega:
+        if q.is_mega and mega_quiz is None:
             mega_quiz = q
         else:
             regular_quizzes.append(q)
@@ -121,6 +125,9 @@ def tests_view(request):
             'quiz': quiz,
             'last_result': last_result,
         })
+
+    # Testlar har safar kirganda tasodifiy tartibda chiqishi uchun aralashtiriladi
+    random.shuffle(quizzes_with_status)
 
     mega_last_result = last_result_map.get(mega_quiz.id) if mega_quiz else None
 
