@@ -99,12 +99,12 @@ def tests_view(request):
         total_questions=Count('questions')
     )
 
-    # Mega testni va oddiy testlarni ajratish
-    mega_quiz = None
+    # Mega testlar va oddiy testlarni ajratish
+    mega_quizzes = []
     regular_quizzes = []
     for q in active_quizzes:
-        if q.is_mega and mega_quiz is None:
-            mega_quiz = q
+        if q.is_mega:
+            mega_quizzes.append(q)
         else:
             regular_quizzes.append(q)
 
@@ -118,6 +118,14 @@ def tests_view(request):
         if r.quiz_id not in last_result_map:
             last_result_map[r.quiz_id] = r
 
+    mega_quizzes_with_status = []
+    for quiz in mega_quizzes:
+        last_result = last_result_map.get(quiz.id)
+        mega_quizzes_with_status.append({
+            'quiz': quiz,
+            'last_result': last_result,
+        })
+
     quizzes_with_status = []
     for quiz in regular_quizzes:
         last_result = last_result_map.get(quiz.id)
@@ -129,12 +137,12 @@ def tests_view(request):
     # Testlar har safar kirganda tasodifiy tartibda chiqishi uchun aralashtiriladi
     random.shuffle(quizzes_with_status)
 
-    mega_last_result = last_result_map.get(mega_quiz.id) if mega_quiz else None
-
     context = {
+        'mega_quizzes_with_status': mega_quizzes_with_status,
         'quizzes_with_status': quizzes_with_status,
-        'mega_quiz': mega_quiz,
-        'mega_last_result': mega_last_result,
+        # Eskisini saqlab qolamiz (orqaga moslik uchun):
+        'mega_quiz': mega_quizzes[0] if mega_quizzes else None,
+        'mega_last_result': mega_quizzes_with_status[0]['last_result'] if mega_quizzes_with_status else None,
     }
     return render(request, 'philosophers/tests.html', context)
 

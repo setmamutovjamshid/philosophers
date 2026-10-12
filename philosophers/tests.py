@@ -200,3 +200,16 @@ class PhilosopherViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         quizzes = [item['quiz'].id for item in response.context['quizzes_with_status']]
         self.assertCountEqual(quizzes, [self.quiz.id, q2.id, q3.id])
+
+    def test_multiple_mega_quizzes_rendered_in_tests_view(self):
+        m1 = Quiz.objects.create(title="Mega Test 1", order=1, is_mega=True)
+        m2 = Quiz.objects.create(title="Mega Test 2", order=2, is_mega=True)
+        response = self.client.get(reverse('tests'))
+        self.assertEqual(response.status_code, 200)
+        mega_quizzes = [item['quiz'].id for item in response.context['mega_quizzes_with_status']]
+        self.assertCountEqual(mega_quizzes, [m1.id, m2.id])
+        self.assertContains(response, 'Mega Test 1')
+        self.assertContains(response, 'Mega Test 2')
+        # Regular quizzes should only contain the regular quiz
+        reg_quizzes = [item['quiz'].id for item in response.context['quizzes_with_status']]
+        self.assertCountEqual(reg_quizzes, [self.quiz.id])
