@@ -1,6 +1,24 @@
+# Python & Virtual Environments
 venv/
-__pycache__/
-db.sqlite3
+.venv/
+env/
 *.pyc
-.env
+__pycache__/
+
+# Django
+db.sqlite3
 staticfiles/
+media/philosophers/*
+!media/philosophers/sokrat.jpg
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+
+# Vercel
+.vercel
+
+# OS metadata
+.DS_Store
+Thumbs.db

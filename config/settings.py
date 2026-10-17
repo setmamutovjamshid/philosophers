@@ -24,11 +24,19 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 't')
 
-allowed_hosts_raw = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.onrender.com')
+allowed_hosts_raw = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.vercel.app,.onrender.com')
 ALLOWED_HOSTS = [h.strip() for h in allowed_hosts_raw.split(',') if h.strip()]
+if '*' in ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ['*']
 
-csrf_trusted_raw = os.environ.get('CSRF_TRUSTED_ORIGINS', 'https://*.onrender.com')
-CSRF_TRUSTED_ORIGINS = [c.strip() for c in csrf_trusted_raw.split(',') if c.strip()]
+csrf_trusted_raw = os.environ.get('CSRF_TRUSTED_ORIGINS', 'https://*.vercel.app,https://*.onrender.com')
+CSRF_TRUSTED_ORIGINS = []
+for c in csrf_trusted_raw.split(','):
+    c = c.strip()
+    if c:
+        if not c.startswith(('http://', 'https://')):
+            c = f'https://{c}'
+        CSRF_TRUSTED_ORIGINS.append(c)
 
 
 # Application definition
